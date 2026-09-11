@@ -20,6 +20,12 @@ function reservePort() {
 
 function backendCommand() {
   if (app.isPackaged) {
+    if (process.platform === 'linux') {
+      return {
+        command: process.env.BOSE_UI_PYTHON || 'python3',
+        args: [path.join(process.resourcesPath, 'linux-backend', 'server.py'), '--no-browser'],
+      };
+    }
     return {
       command: path.join(process.resourcesPath, 'backend', 'bose-panel'),
       args: ['--no-browser'],

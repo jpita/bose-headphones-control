@@ -2,14 +2,19 @@
   "name": "bose-headphones-control",
   "version": "0.1.0",
   "description": "A local desktop control panel for compatible Bose headphones.",
-  "author": "Gabriel Pita",
+  "desktopName": "bose-headphones-control",
+  "author": {
+    "name": "Gabriel Pita",
+    "email": "dvpita@gmail.com"
+  },
   "main": "electron/main.cjs",
   "scripts": {
     "desktop": "electron .",
     "check": "node --check electron/main.cjs",
     "build:backend": "./scripts/build-backend.sh",
     "make:mac": "npm run build:backend && electron-builder --mac dmg zip",
-    "make:linux": "npm run build:backend && electron-builder --linux AppImage pacman"
+    "prepare:linux-backend": "./scripts/prepare-linux-backend.sh",
+    "make:linux": "npm run prepare:linux-backend && electron-builder --linux AppImage pacman --arm64"
   },
   "repository": {
     "type": "git",
@@ -39,6 +44,13 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "dist/linux-backend",
+        "to": "linux-backend",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "mac": {
@@ -53,11 +65,19 @@
     },
     "linux": {
       "category": "Utility",
+      "syncDesktopName": true,
       "target": [
         "AppImage",
         "pacman"
       ],
       "icon": "assets/icon.png"
+    },
+    "pacman": {
+      "depends": [
+        "python",
+        "bluez",
+        "bluez-utils"
+      ]
     }
   }
 }
