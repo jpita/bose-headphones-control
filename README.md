@@ -54,6 +54,26 @@ Your browser opens at [http://127.0.0.1:8765](http://127.0.0.1:8765). To start w
 .venv/bin/python server.py --no-browser
 ```
 
+## macOS desktop app (in progress)
+
+The Electron wrapper runs the same panel as a normal macOS window and starts the Bluetooth backend for you.
+
+For local development after completing the Python install above:
+
+```sh
+npm install
+npm run desktop
+```
+
+To produce installable macOS artifacts, install PyInstaller in the virtual environment, then build:
+
+```sh
+.venv/bin/pip install -r requirements-build.txt
+npm run make:mac
+```
+
+The resulting `.dmg` and `.zip` are written under `release/`. The first public build still needs an Apple Developer signing certificate and notarization before it is ready for general distribution.
+
 ## Use it
 
 1. Confirm the header shows your headphones as **connected**.

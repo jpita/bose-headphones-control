@@ -1,0 +1,53 @@
+{
+  "name": "bmap-control-panel",
+  "version": "0.1.0",
+  "description": "A local desktop control panel for compatible Bose headphones.",
+  "author": "Gabriel Pita",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "desktop": "electron .",
+    "check": "node --check electron/main.cjs",
+    "build:backend": "./scripts/build-backend.sh",
+    "make:mac": "npm run build:backend && electron-builder --mac dmg zip"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jpita/bose-web-ui.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^39.2.6",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.jpita.bmap-control-panel",
+    "productName": "BMAP Control Panel",
+    "directories": {
+      "output": "release"
+    },
+    "asar": true,
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/bose-panel",
+        "to": "backend",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "extendInfo": {
+        "NSBluetoothAlwaysUsageDescription": "BMAP Control Panel uses Bluetooth to communicate with your paired Bose headphones."
+      }
+    }
+  }
+}
