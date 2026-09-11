@@ -28,6 +28,8 @@ cat > "${app_dir}/Contents/Info.plist" <<'PLIST'
 <key>CFBundleVersion</key><string>1</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSBluetoothAlwaysUsageDescription</key><string>Bose Headphones Control uses Bluetooth to communicate with your paired Bose headphones.</string>
+<key>NSLocalNetworkUsageDescription</key><string>Bose Headphones Control talks to its bundled local Bluetooth service on this Mac.</string>
+<key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>
 </dict></plist>
 PLIST
 plutil -lint "${app_dir}/Contents/Info.plist"
