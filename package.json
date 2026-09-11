@@ -8,7 +8,8 @@
     "desktop": "electron .",
     "check": "node --check electron/main.cjs",
     "build:backend": "./scripts/build-backend.sh",
-    "make:mac": "npm run build:backend && electron-builder --mac dmg zip"
+    "make:mac": "npm run build:backend && electron-builder --mac dmg zip",
+    "make:linux": "npm run build:backend && electron-builder --linux AppImage pacman"
   },
   "repository": {
     "type": "git",
@@ -49,6 +50,14 @@
       "extendInfo": {
         "NSBluetoothAlwaysUsageDescription": "Bose Headphones Control uses Bluetooth to communicate with your paired Bose headphones."
       }
+    },
+    "linux": {
+      "category": "Utility",
+      "target": [
+        "AppImage",
+        "pacman"
+      ],
+      "icon": "assets/icon.png"
     }
   }
 }

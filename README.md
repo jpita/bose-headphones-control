@@ -26,6 +26,7 @@ Change listening modes, noise control, EQ, profile slots, device settings, and m
 | --- | --- | --- |
 | **Web panel** | Development, Linux, or running directly from source | Python and a terminal |
 | **macOS desktop app** | A finished Mac app with no Python or terminal for the user | An Apple Silicon Mac and the packaged `.dmg` or `.zip` |
+| **Linux desktop app** | A finished Electron app for Linux | Build an `.AppImage` or Arch `.pacman` package from source |
 
 Both options use the same local UI and Bluetooth backend. Neither sends headphone data to a server.
 
@@ -88,6 +89,32 @@ npm run make:mac
 ```
 
 The resulting `.dmg` and `.zip` are written under `release/`. The first public build still needs an Apple Developer signing certificate and notarization before it is ready for general distribution.
+
+## Linux desktop app: Electron
+
+On an Arch-based system such as Omarchy, build a desktop app from the same source. This produces an `.AppImage` that launches directly and an Arch package that adds it to the application launcher.
+
+```sh
+sudo pacman -S --needed git python nodejs npm bluez bluez-utils
+git clone https://github.com/jpita/bose-headphones-control.git
+cd bose-headphones-control
+python -m venv .venv
+.venv/bin/pip install -r requirements-build.txt
+npm install
+npm run make:linux
+```
+
+The files are written under `release/`:
+
+```sh
+# Launch it directly
+./release/Bose\ Headphones\ Control-*.AppImage
+
+# Or install the Arch package, then open Bose Headphones Control from the launcher
+sudo pacman -U ./release/bose-headphones-control-*.pacman
+```
+
+The Linux app needs access to a Bluetooth adapter. A virtual machine may need USB Bluetooth passthrough before it can talk to headphones.
 
 ## Use it
 

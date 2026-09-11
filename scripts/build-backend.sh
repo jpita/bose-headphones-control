@@ -12,10 +12,21 @@ if [[ ! -x "${python_bin}" ]]; then
 fi
 
 cd "${project_dir}"
-"${python_bin}" -m PyInstaller --noconfirm --clean --onedir --name bose-panel \
+pyinstaller_args=(
+  --noconfirm
+  --clean
+  --onedir
+  --name bose-panel
   --add-data "static:static" \
   --add-data "vendor:vendor" \
-  --hidden-import objc \
-  --hidden-import Foundation \
-  --hidden-import IOBluetooth \
-  server.py
+)
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  pyinstaller_args+=(
+    --hidden-import objc
+    --hidden-import Foundation
+    --hidden-import IOBluetooth
+  )
+fi
+
+"${python_bin}" -m PyInstaller "${pyinstaller_args[@]}" server.py
