@@ -155,3 +155,19 @@ BOSE_DEVICE=qc45 BOSE_MAC=68:F2:1F:XX:XX:XX .venv/bin/python server.py
 The BMAP implementation in [`vendor/pybmap`](vendor/pybmap) originates from [aaronsb/bosectl](https://github.com/aaronsb/bosectl). Its MIT license is retained in [vendor/LICENSE-bosectl](vendor/LICENSE-bosectl).
 
 This project is not affiliated with Bose. Released under the [MIT License](LICENSE).
+
+## Native macOS app: SwiftUI
+
+The repository also includes a native SwiftUI macOS implementation. It bundles the same Bluetooth backend as the Electron app, while using native macOS controls and windowing.
+
+It is currently built from source for Apple Silicon Macs:
+
+```sh
+xcode-select --install
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-build.txt
+./scripts/make-native-mac-app.sh
+open "release/Bose Headphones Control Native.app"
+```
+
+The native app starts its local backend itself. It needs the same Bluetooth permission and compatible paired headphones as the Electron app.
