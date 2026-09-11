@@ -61,7 +61,11 @@ body {
   font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.5;
+  scrollbar-width: none;
 }
+
+/* Keep every scrolling input method, without a permanently visible gutter. */
+body::-webkit-scrollbar { display: none; }
 
 .wrap {
   max-width: 1080px;
