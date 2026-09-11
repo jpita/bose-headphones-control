@@ -116,6 +116,17 @@ private struct ControlPanel: View {
                 .disabled(backend.isBusy)
                 Divider().overlay(.white.opacity(0.1))
             }
+            if backend.state.supportsPrompts {
+                Toggle(isOn: Binding(get: { backend.state.promptsEnabled }, set: backend.setPrompts)) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Voice prompts")
+                        Text("Announcements from your headphones")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                .disabled(backend.isBusy)
+                Divider().overlay(.white.opacity(0.1))
+            }
             LabeledContent("Firmware", value: backend.state.firmware)
             LabeledContent("Current mode", value: backend.state.mode)
         }

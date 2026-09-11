@@ -13,6 +13,8 @@ struct NativeHeadphoneState {
     var treble = 0.0
     var sidetone = "off"
     var supportsSidetone = false
+    var promptsEnabled = false
+    var supportsPrompts = false
 }
 
 @MainActor
@@ -72,6 +74,10 @@ final class NativeBackend: ObservableObject {
 
     func setSidetone(_ level: String) {
         action("set_sidetone", args: ["level": level])
+    }
+
+    func setPrompts(_ enabled: Bool) {
+        action("set_prompts", args: ["enabled": enabled])
     }
 
     private func waitForBackend() async {
@@ -137,6 +143,8 @@ final class NativeBackend: ObservableObject {
         state.mode = string(status["mode"]).isEmpty ? "—" : string(status["mode"])
         state.sidetone = string(status["sidetone"]).isEmpty ? "off" : string(status["sidetone"])
         state.supportsSidetone = (snapshot["features"] as? [String] ?? []).contains("sidetone")
+        state.promptsEnabled = (status["prompts_enabled"] as? Bool) ?? false
+        state.supportsPrompts = (snapshot["features"] as? [String] ?? []).contains("voice_prompts")
         let profiles = snapshot["profiles"] as? [[String: Any]] ?? []
         state.modes = profiles.compactMap { profile in
             let name = string(profile["name"])
