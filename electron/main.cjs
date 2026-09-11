@@ -6,6 +6,15 @@ const path = require('node:path');
 
 let backend;
 let mainWindow;
+let stoppingBackend = false;
+
+function stopBackend() {
+  if (stoppingBackend || !backend || backend.killed) return;
+  stoppingBackend = true;
+  backend.removeAllListeners('error');
+  backend.kill('SIGTERM');
+  backend = undefined;
+}
 
 function reservePort() {
   return new Promise((resolve, reject) => {
@@ -100,6 +109,9 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => app.quit());
-app.on('before-quit', () => {
-  if (backend && !backend.killed) backend.kill('SIGTERM');
+app.on('before-quit', stopBackend);
+app.on('will-quit', stopBackend);
+process.on('SIGTERM', () => {
+  stopBackend();
+  app.quit();
 });

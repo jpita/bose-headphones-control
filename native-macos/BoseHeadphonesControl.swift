@@ -1,9 +1,18 @@
 import SwiftUI
+import AppKit
 
-@main struct BoseHeadphonesControl: App { var body: some Scene { WindowGroup("Bose Headphones Control") { ControlPanel().frame(minWidth: 940, minHeight: 680) }.windowStyle(.hiddenTitleBar) } }
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    func applicationWillTerminate(_ notification: Notification) { NativeBackend.shared.stop() }
+}
+
+@main struct BoseHeadphonesControl: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    var body: some Scene { WindowGroup("Bose Headphones Control") { ControlPanel().frame(minWidth: 940, minHeight: 680) }.windowStyle(.hiddenTitleBar) }
+}
 
 private struct ControlPanel: View {
-    @StateObject private var backend = NativeBackend()
+    @StateObject private var backend = NativeBackend.shared
     @AppStorage("announceMode") private var announceMode = false
     @State private var eq = [0.0, 0.0, 0.0]
     @State private var deviceName = ""

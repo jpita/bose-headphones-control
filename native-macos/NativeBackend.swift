@@ -45,6 +45,7 @@ struct NativeHeadphoneState {
 
 @MainActor
 final class NativeBackend: ObservableObject {
+    static let shared = NativeBackend()
     @Published private(set) var state = NativeHeadphoneState()
     @Published private(set) var message = "Starting local Bluetooth service…"
     @Published private(set) var isBusy = false
@@ -53,8 +54,6 @@ final class NativeBackend: ObservableObject {
 
     private var process: Process?
     private var port = Int.random(in: 40000...50000)
-
-    deinit { process?.terminate() }
 
     func start() {
         guard process == nil else { return }
@@ -73,6 +72,13 @@ final class NativeBackend: ObservableObject {
         }
         do { try task.run(); process = task; Task { await waitForBackend() } }
         catch { message = "Could not start the Bluetooth service: \(error.localizedDescription)" }
+    }
+
+    func stop() {
+        guard let task = process else { return }
+        process = nil
+        task.terminationHandler = nil
+        if task.isRunning { task.terminate() }
     }
 
     func refresh() { Task { _ = await loadState() } }
@@ -123,7 +129,7 @@ final class NativeBackend: ObservableObject {
 
     @discardableResult private func loadState(silent: Bool = false) async -> Bool {
         do {
-            var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/api/state")!); request.timeoutInterval = 3
+            var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/api/state")!); request.timeoutInterval = 15
             let (data, _) = try await URLSession.shared.data(for: request)
             let payload = try object(from: data)
             guard (payload["ok"] as? Bool) == true, let snapshot = payload["state"] as? [String: Any] else {
