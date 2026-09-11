@@ -20,7 +20,16 @@ Change listening modes, noise control, EQ, profile slots, device settings, and m
 
 ![Profile slots, device settings, button mapping, and write verification](docs/advanced-controls.png)
 
-## Install and run
+## Choose how to run it
+
+| Option | Best for | What you need |
+| --- | --- | --- |
+| **Web panel** | Development, Linux, or running directly from source | Python and a terminal |
+| **macOS desktop app** | A finished Mac app with no Python or terminal for the user | An Apple Silicon Mac and the packaged `.dmg` or `.zip` |
+
+Both options use the same local UI and Bluetooth backend. Neither sends headphone data to a server.
+
+## Web panel: install and run from source
 
 ### 1. Get the code
 
@@ -54,9 +63,15 @@ Your browser opens at [http://127.0.0.1:8765](http://127.0.0.1:8765). To start w
 .venv/bin/python server.py --no-browser
 ```
 
-## macOS desktop app (in progress)
+## macOS desktop app: Electron
 
 The Electron wrapper runs the same panel as a normal macOS window and starts the Bluetooth backend for you.
+
+### Install a packaged build
+
+If you have a built arm64 `.dmg` or `.zip`, move **BMAP Control Panel** to Applications, then open it. Until the app is signed and notarized, macOS requires you to Control-click the app and choose **Open** the first time.
+
+### Run or build it from source
 
 For local development after completing the Python install above:
 
