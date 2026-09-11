@@ -1,4 +1,4 @@
-/* BMAP Control Panel — talks to the local server in server.py.
+/* Bose Headphones Control — talks to the local server in server.py.
    Core idea: the firmware silently drops some writes, so every action
    re-reads the device and the UI reports stored values, never requested ones. */
 
@@ -162,36 +162,20 @@ function renderModes() {
 function renderNoise() {
   const prof = currentProfile();
   const st = STATE.status;
+  const section = $("noise-section");
   const note = $("cnc-note");
   const controls = $("noise-controls");
 
-  // A preset slot takes no writes, so the level, ANC and wind block all do
-  // nothing while one is active. Hide them rather than show dead controls.
+  // A preset slot takes no writes, so there is no Noise Control UI to show.
   const locked = !prof || !prof.editable;
-  controls.hidden = locked;
+  section.hidden = locked;
 
   if (locked) {
-    const custom = (STATE.profiles || [])
-      .filter((p) => p.editable && (p.name || "").trim());
-    note.className = "note";
-    note.innerHTML = `<span>Noise settings live on custom profiles.
-      <strong>${escapeHtml((prof && prof.name) || "This mode")}</strong> is a preset
-      and cannot be changed.</span>`;
-    if (custom.length) {
-      const row = document.createElement("span");
-      row.className = "row";
-      row.style.marginLeft = "auto";
-      custom.forEach((p) => {
-        const b = document.createElement("button");
-        b.textContent = `Use ${p.name}`;
-        b.onclick = () => run(`Switch to ${p.name}`, "set_mode",
-          { name: p.name, announce: announceOn() }, null);
-        row.appendChild(b);
-      });
-      note.appendChild(row);
-    }
     return;
   }
+
+  section.hidden = false;
+  controls.hidden = false;
 
   $("cnc").max = st.cnc_max || 10;
   $("cnc").value = st.cnc_level;

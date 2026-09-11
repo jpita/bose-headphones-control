@@ -57,7 +57,7 @@ async function startBackend() {
 
   backend = spawn(command, args, { env, stdio: ['ignore', 'pipe', 'pipe'] });
   backend.once('error', (error) => {
-    dialog.showErrorBox('Cannot start BMAP Control Panel', `${error.message}\n\nExpected backend: ${command}`);
+    dialog.showErrorBox('Cannot start Bose Headphones Control', `${error.message}\n\nExpected backend: ${command}`);
     app.quit();
   });
   backend.stderr.on('data', (chunk) => console.error(`[backend] ${chunk}`));
@@ -74,7 +74,7 @@ function createWindow(url) {
     height: 900,
     minWidth: 900,
     minHeight: 650,
-    title: 'BMAP Control Panel',
+    title: 'Bose Headphones Control',
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -88,7 +88,7 @@ app.whenReady().then(async () => {
   try {
     createWindow(await startBackend());
   } catch (error) {
-    dialog.showErrorBox('Cannot start BMAP Control Panel', error.message);
+    dialog.showErrorBox('Cannot start Bose Headphones Control', error.message);
     app.quit();
   }
 });

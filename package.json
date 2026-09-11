@@ -1,5 +1,5 @@
 {
-  "name": "bmap-control-panel",
+  "name": "bose-headphones-control",
   "version": "0.1.0",
   "description": "A local desktop control panel for compatible Bose headphones.",
   "author": "Gabriel Pita",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jpita/bose-web-ui.git"
+    "url": "git+https://github.com/jpita/bose-headphones-control.git"
   },
   "license": "MIT",
   "devDependencies": {
@@ -20,8 +20,8 @@
     "electron-builder": "^26.0.12"
   },
   "build": {
-    "appId": "com.jpita.bmap-control-panel",
-    "productName": "BMAP Control Panel",
+    "appId": "com.jpita.bose-headphones-control",
+    "productName": "Bose Headphones Control",
     "directories": {
       "output": "release"
     },
@@ -46,7 +46,7 @@
         "zip"
       ],
       "extendInfo": {
-        "NSBluetoothAlwaysUsageDescription": "BMAP Control Panel uses Bluetooth to communicate with your paired Bose headphones."
+        "NSBluetoothAlwaysUsageDescription": "Bose Headphones Control uses Bluetooth to communicate with your paired Bose headphones."
       }
     }
   }

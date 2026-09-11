@@ -1,12 +1,12 @@
 Credit: this project builds on the upstream [bosectl](https://github.com/aaronsb/bosectl) project and its `pybmap` library, which reverse-engineered Bose's BMAP protocol.
 
-# BMAP Control Panel
+# Bose Headphones Control
 
 A small local web control panel for compatible Bose headphones.
 
 Change listening modes, noise control, EQ, profile slots, device settings, and more from your browser. The app runs only on your computer and talks to your already-paired headphones over Bluetooth—no Bose account, cloud service, or phone required.
 
-![BMAP Control Panel showing listening mode, noise controls, EQ, profiles, and device settings](docs/panel.png)
+![Bose Headphones Control showing listening mode, noise controls, EQ, profiles, and device settings](docs/panel.png)
 
 ## What it can do
 
@@ -34,8 +34,8 @@ Both options use the same local UI and Bluetooth backend. Neither sends headphon
 ### 1. Get the code
 
 ```sh
-git clone https://github.com/jpita/bose-web-ui.git
-cd bose-web-ui
+git clone https://github.com/jpita/bose-headphones-control.git
+cd bose-headphones-control
 ```
 
 ### 2. Create a Python environment
@@ -69,7 +69,7 @@ The Electron wrapper runs the same panel as a normal macOS window and starts the
 
 ### Install a packaged build
 
-If you have a built arm64 `.dmg` or `.zip`, move **BMAP Control Panel** to Applications, then open it. Until the app is signed and notarized, macOS requires you to Control-click the app and choose **Open** the first time.
+If you have a built arm64 `.dmg` or `.zip`, move **Bose Headphones Control** to Applications, then open it. Until the app is signed and notarized, macOS requires you to Control-click the app and choose **Open** the first time.
 
 ### Run or build it from source
 
