@@ -22,6 +22,7 @@
   "build": {
     "appId": "com.jpita.bose-headphones-control",
     "productName": "Bose Headphones Control",
+    "icon": "assets/icon.icns",
     "directories": {
       "output": "release"
     },

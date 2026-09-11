@@ -346,6 +346,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send_file("app.js", "text/javascript; charset=utf-8")
         elif route == "/app.css":
             self._send_file("app.css", "text/css; charset=utf-8")
+        elif route == "/icon.png":
+            self._send_file("icon.png", "image/png")
         elif route == "/api/poll":
             self._api(lambda: {"ok": True, "poll": device.run(read_light)})
         elif route == "/api/state":
