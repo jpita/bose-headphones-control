@@ -67,15 +67,24 @@ async function startBackend() {
   const env = { ...process.env, BOSE_UI_HOST: '127.0.0.1', BOSE_UI_PORT: String(port) };
 
   backend = spawn(command, args, { env, stdio: ['ignore', 'pipe', 'pipe'] });
-  backend.once('error', (error) => {
-    dialog.showErrorBox('Cannot start Bose Headphones Control', `${error.message}\n\nExpected backend: ${command}`);
-    app.quit();
+  let backendError = '';
+  const backendFailed = new Promise((resolve, reject) => {
+    backend.once('error', (error) => {
+      reject(new Error(`${error.message}\n\nExpected backend: ${command}`));
+    });
+    backend.once('exit', (code, signal) => {
+      const detail = backendError.trim();
+      reject(new Error(detail || `Bluetooth service stopped (${code ?? signal}).`));
+    });
   });
-  backend.stderr.on('data', (chunk) => console.error(`[backend] ${chunk}`));
+  backend.stderr.on('data', (chunk) => {
+    backendError += chunk.toString();
+    console.error(`[backend] ${chunk}`);
+  });
   backend.stdout.on('data', (chunk) => console.info(`[backend] ${chunk}`));
 
   const url = `http://127.0.0.1:${port}/`;
-  await waitForServer(url);
+  await Promise.race([waitForServer(url), backendFailed]);
   return url;
 }
 
@@ -95,14 +104,24 @@ function createWindow(url) {
   mainWindow.loadURL(url);
 }
 
-app.whenReady().then(async () => {
-  try {
-    createWindow(await startBackend());
-  } catch (error) {
-    dialog.showErrorBox('Cannot start Bose Headphones Control', error.message);
-    app.quit();
-  }
-});
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow?.isMinimized()) mainWindow.restore();
+    mainWindow?.show();
+    mainWindow?.focus();
+  });
+
+  app.whenReady().then(async () => {
+    try {
+      createWindow(await startBackend());
+    } catch (error) {
+      dialog.showErrorBox('Cannot start Bose Headphones Control', error.message);
+      app.quit();
+    }
+  });
+}
 
 app.on('window-all-closed', () => app.quit());
 app.on('before-quit', stopBackend);

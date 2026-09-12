@@ -1,4 +1,6 @@
 import json
+import os
+import tempfile
 import threading
 import unittest
 import urllib.error
@@ -93,6 +95,21 @@ class DeviceTests(unittest.TestCase):
         self.assertIs(device._conn, fresh)
 
 
+class LockTests(unittest.TestCase):
+    def test_only_one_backend_can_hold_the_shared_lock(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "backend.lock")
+            first = server.acquire_backend_lock(path)
+            self.addCleanup(first.close)
+
+            with self.assertRaisesRegex(server.BackendAlreadyRunning, "already running"):
+                server.acquire_backend_lock(path)
+
+            first.close()
+            second = server.acquire_backend_lock(path)
+            second.close()
+
+
 class DataTests(unittest.TestCase):
     def test_plausibility_rejects_invalid_battery_and_control_characters(self):
         with self.assertRaisesRegex(server.StaleConnection, "battery"):
@@ -162,12 +179,14 @@ class ApiTests(unittest.TestCase):
         cls.thread.join(timeout=1)
         server.device = cls.original_device
 
-    def request_json(self, path, payload=None):
+    def request_json(self, path, payload=None, headers=None):
         body = None if payload is None else json.dumps(payload).encode("utf-8")
+        request_headers = {"Content-Type": "application/json"}
+        request_headers.update(headers or {})
         request = urllib.request.Request(
             self.base_url + path,
             data=body,
-            headers={"Content-Type": "application/json"},
+            headers=request_headers,
         )
         with urllib.request.urlopen(request, timeout=2) as response:
             return response.status, json.load(response)
@@ -183,6 +202,7 @@ class ApiTests(unittest.TestCase):
         status, payload = self.request_json(
             "/api/action",
             {"action": "set_eq", "args": {"bass": -1, "mid": 2, "treble": 5}},
+            headers={"Origin": self.base_url},
         )
         self.assertEqual(status, 200)
         self.assertEqual(payload["result"], [-1, 2, 5])
@@ -196,6 +216,37 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(error.code, 400)
         payload = json.load(error)
         self.assertIn("unknown action", payload["error"])
+
+    def test_cross_origin_action_is_rejected(self):
+        with self.assertRaises(urllib.error.HTTPError) as raised:
+            self.request_json(
+                "/api/action",
+                {"action": "power_off"},
+                headers={"Origin": "https://example.com"},
+            )
+        error = raised.exception
+        self.addCleanup(error.close)
+        self.assertEqual(error.code, 403)
+        self.assertIn("cross-origin", json.load(error)["error"])
+
+    def test_non_json_action_is_rejected(self):
+        request = urllib.request.Request(
+            self.base_url + "/api/action",
+            data=b'{"action":"power_off"}',
+            headers={"Content-Type": "text/plain"},
+        )
+        with self.assertRaises(urllib.error.HTTPError) as raised:
+            urllib.request.urlopen(request, timeout=2)
+        error = raised.exception
+        self.addCleanup(error.close)
+        self.assertEqual(error.code, 415)
+
+    def test_page_has_security_headers_and_no_remote_assets(self):
+        with urllib.request.urlopen(self.base_url + "/", timeout=2) as response:
+            page = response.read().decode("utf-8")
+            self.assertIn("default-src 'self'", response.headers["Content-Security-Policy"])
+            self.assertEqual(response.headers["X-Content-Type-Options"], "nosniff")
+        self.assertNotIn("https://", page)
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 project_dir="$(cd -- "${script_dir}/.." && pwd)"
 app_dir="${project_dir}/release/Bose Headphones Control Native.app"
+version="$(awk -F'"' '/"version"/ {print $4; exit}' "${project_dir}/package.json")"
 
 "${script_dir}/build-backend.sh"
 mkdir -p "${app_dir}/Contents/MacOS" "${app_dir}/Contents/Resources/backend"
@@ -34,4 +35,5 @@ cat > "${app_dir}/Contents/Info.plist" <<'PLIST'
 </dict></plist>
 PLIST
 plutil -lint "${app_dir}/Contents/Info.plist"
+plutil -replace CFBundleShortVersionString -string "${version}" "${app_dir}/Contents/Info.plist"
 echo "Built ${app_dir}"

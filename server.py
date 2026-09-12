@@ -13,6 +13,7 @@ import sys
 import threading
 import traceback
 import webbrowser
+import fcntl
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
 
@@ -26,6 +27,40 @@ HOST = os.environ.get("BOSE_UI_HOST", "127.0.0.1")
 PORT = int(os.environ.get("BOSE_UI_PORT", "8765"))
 MAC = os.environ.get("BOSE_MAC") or None
 DEVICE_TYPE = os.environ.get("BOSE_DEVICE") or None
+LOCK_PATH = os.environ.get("BOSE_UI_LOCK") or os.path.join(
+    os.environ.get("XDG_RUNTIME_DIR")
+    or os.environ.get("XDG_CACHE_HOME")
+    or os.path.join(os.path.expanduser("~"), ".cache"),
+    "bose-headphones-control",
+    "backend.lock",
+)
+
+
+class BackendAlreadyRunning(RuntimeError):
+    pass
+
+
+def acquire_backend_lock(path=None):
+    """Hold an exclusive per-user lock for the lifetime of the backend."""
+    path = path or LOCK_PATH
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, mode=0o700, exist_ok=True)
+    descriptor = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
+    handle = os.fdopen(descriptor, "r+", encoding="utf-8")
+    try:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        handle.close()
+        raise BackendAlreadyRunning(
+            "Another Bose Headphones Control app is already running. "
+            "Close it before opening this one."
+        )
+    handle.seek(0)
+    handle.truncate()
+    handle.write(str(os.getpid()))
+    handle.flush()
+    return handle
 
 
 class Device:
@@ -327,8 +362,30 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; connect-src 'self'; object-src 'none'; "
+            "base-uri 'none'; frame-ancestors 'none'",
+        )
         self.end_headers()
         self.wfile.write(body)
+
+    def _allow_api_request(self):
+        origin = self.headers.get("Origin")
+        if origin:
+            parsed = urlparse(origin)
+            if parsed.scheme != "http" or parsed.netloc != self.headers.get("Host"):
+                self._send(403, {"ok": False, "error": "cross-origin request rejected"})
+                return False
+
+        content_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+        if content_type != "application/json":
+            self._send(415, {"ok": False, "error": "application/json required"})
+            return False
+        return True
 
     def _send_file(self, relpath, content_type):
         path = os.path.join(HERE, "static", relpath)
@@ -358,6 +415,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if urlparse(self.path).path != "/api/action":
             self._send(404, {"error": "not found"})
+            return
+        if not self._allow_api_request():
             return
 
         length = int(self.headers.get("Content-Length") or 0)
@@ -412,8 +471,18 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
+    try:
+        backend_lock = acquire_backend_lock()
+    except BackendAlreadyRunning as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+
     url = "http://%s:%d/" % (HOST, PORT)
-    server = ThreadingHTTPServer((HOST, PORT), Handler)
+    try:
+        server = ThreadingHTTPServer((HOST, PORT), Handler)
+    except Exception:
+        backend_lock.close()
+        raise
 
     # HTTP runs on a daemon thread; Bluetooth stays on the main thread.
     threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -431,7 +500,9 @@ def main():
         device.shutdown()
         server.shutdown()
         server.server_close()
+        backend_lock.close()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

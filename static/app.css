@@ -1,6 +1,6 @@
 /* Bose Headphones Control
    Palette: slate ground, amber instrument accent (audio hardware LEDs).
-   Type: IBM Plex Sans / Plex Sans Condensed labels / Plex Mono for packet data. */
+   Type: native system sans and monospace fonts. */
 
 :root {
   --bg: #f1f4f7;
@@ -58,7 +58,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 15px;
   line-height: 1.5;
   scrollbar-width: none;
@@ -102,21 +102,21 @@ body::-webkit-scrollbar { display: none; }
   letter-spacing: -.01em;
 }
 .brand .sub {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 11.5px;
   color: var(--muted);
 }
 
 .readout { display: flex; flex-direction: column; gap: 1px; }
 .readout .k {
-  font-family: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: .09em;
   color: var(--muted);
 }
 .readout .v {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
@@ -156,7 +156,7 @@ section:first-of-type { border-top: 0; }
 .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
 .sec-head h2 {
   margin: 0;
-  font-family: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: .11em;
@@ -164,7 +164,7 @@ section:first-of-type { border-top: 0; }
   font-weight: 600;
 }
 .sec-head .addr {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 11px;
   color: var(--muted);
 }
@@ -209,7 +209,7 @@ input[type="text"], input[type="number"], select {
 
 label.field { display: flex; flex-direction: column; gap: 5px; }
 label.field > .lab {
-  font-family: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: .09em;
@@ -248,14 +248,14 @@ label.field > .lab {
   gap: 12px;
 }
 .slider-row .lab {
-  font-family: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--muted);
 }
 .slider-row .val {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 13.5px;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -288,7 +288,7 @@ input[type="range"]::-moz-range-thumb {
 
 .scale-ends {
   display: flex; justify-content: space-between;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 10.5px; color: var(--muted);
   grid-column: 2;
 }
@@ -320,20 +320,20 @@ input[type="range"]::-moz-range-thumb {
 .slot.preset { background: var(--surface-sunk); }
 .slot.current { border-color: var(--accent); }
 .slot .idx {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 12px; color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 .slot .nm { font-weight: 600; font-size: 14.5px; }
 .slot .nm.empty { font-weight: 400; color: var(--muted); font-style: italic; }
 .slot .meta {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 11.5px; color: var(--muted);
 }
 .slot .ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 .tag {
-  font-family: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
   padding: 2px 7px; border-radius: 3px;
   border: 1px solid var(--line); color: var(--muted);
@@ -353,7 +353,7 @@ input[type="range"]::-moz-range-thumb {
 }
 .note.bad { border-left-color: var(--warn); background: var(--warn-soft); }
 .note code {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 12px;
 }
 
@@ -364,7 +364,7 @@ input[type="range"]::-moz-range-thumb {
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 12px;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 12px;
   line-height: 1.65;
   max-height: 280px;
@@ -407,11 +407,11 @@ input[type="range"]::-moz-range-thumb {
 table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line-soft); }
 th {
-  font-family: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em;
   color: var(--muted); font-weight: 600;
 }
-td.mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+td.mono { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-variant-numeric: tabular-nums; }
 .scroll-x { overflow-x: auto; }
 
 .dim { color: var(--muted); }

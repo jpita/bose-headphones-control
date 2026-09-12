@@ -17,6 +17,7 @@
     "test:native": "swiftc native-macos/BackendProcessController.swift tests/test_native_backend_process.swift -o /tmp/bose-native-process-tests && /tmp/bose-native-process-tests && swiftc -parse-as-library -typecheck native-macos/BoseHeadphonesControl.swift native-macos/NativeBackend.swift native-macos/BackendProcessController.swift -framework SwiftUI -framework AppKit",
     "build:backend": "./scripts/build-backend.sh",
     "make:mac": "npm run build:backend && electron-builder --mac dmg zip",
+    "make:native": "./scripts/make-native-mac-dmg.sh",
     "prepare:linux-backend": "./scripts/prepare-linux-backend.sh",
     "make:linux": "npm run prepare:linux-backend && electron-builder --linux AppImage pacman --arm64"
   },

@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an app improvement or device capability
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what happens today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the simplest useful result.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Headphone model and firmware
+      placeholder: Bose QuietComfort 45, firmware 4.0.4
+  - type: dropdown
+    id: app
+    attributes:
+      label: App
+      options:
+        - Native macOS
+        - Electron macOS
+        - Electron Linux
+        - Web panel
+        - All versions
+    validations:
+      required: true

@@ -12,11 +12,21 @@ struct BackendProcessTests {
         controller.adopt(task)
 
         precondition(controller.hasProcess)
+        precondition(controller.isRunning)
         precondition(controller.stop())
         task.waitUntilExit()
         precondition(!task.isRunning)
         precondition(!controller.hasProcess)
         precondition(!controller.stop())
+
+        let exitedTask = Process()
+        exitedTask.executableURL = URL(fileURLWithPath: "/usr/bin/false")
+        try exitedTask.run()
+        exitedTask.waitUntilExit()
+        controller.adopt(exitedTask)
+        precondition(controller.exitStatus == 1)
+        controller.clearExitedProcess()
+        precondition(!controller.hasProcess)
 
         print("Native backend process stops once and clears its reference")
     }

@@ -271,14 +271,14 @@ function drawEqCurve(vals) {
        stroke="currentColor" stroke-width="1" opacity="${v === 0 ? .45 : .18}"
        ${v === 0 ? "" : 'stroke-dasharray="3 4"'} />
      <text x="${pad + 2}" y="${y(v) - 3}" font-size="9" fill="currentColor"
-       opacity=".55" font-family="IBM Plex Mono, monospace">${v > 0 ? "+" : ""}${v}</text>`
+       opacity=".55" font-family="ui-monospace, monospace">${v > 0 ? "+" : ""}${v}</text>`
   ).join("");
 
   const labels = vals.map((v, i) => {
     const name = bands[i] ? (bands[i].name || BAND_LABEL[bands[i].band_id]) : "";
     return `<text x="${pts[i][0]}" y="${H - 1}" font-size="9" fill="currentColor"
       opacity=".6" text-anchor="${i === 0 ? "start" : i === vals.length - 1 ? "end" : "middle"}"
-      font-family="IBM Plex Sans Condensed, sans-serif">${escapeHtml(name)}</text>`;
+      font-family="system-ui, sans-serif">${escapeHtml(name)}</text>`;
   }).join("");
 
   svg.style.color = getComputedStyle(document.body).getPropertyValue("--muted");

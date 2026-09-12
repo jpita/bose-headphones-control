@@ -117,6 +117,13 @@ final class NativeBackend: ObservableObject {
         for _ in 0..<16 {
             try? await Task.sleep(for: .milliseconds(350))
             if await loadState(silent: true) { return }
+            if let status = processController.exitStatus {
+                processController.clearExitedProcess()
+                message = status == 2
+                    ? "Another Bose Headphones Control app is already open. Close it, then reopen this app."
+                    : "The local Bluetooth service stopped with status \(status)."
+                return
+            }
         }
         message = "Could not connect. Turn on and connect your headphones, then select Reconnect."
     }

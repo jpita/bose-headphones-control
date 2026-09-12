@@ -1,36 +1,54 @@
-Credit: this project builds on the upstream [bosectl](https://github.com/aaronsb/bosectl) project and its `pybmap` library, which reverse-engineered Bose's BMAP protocol.
+Credit: this project builds on the upstream [bosectl](https://github.com/aaronsb/bosectl) project by Aaron Bockelie and its `pybmap` library, which reverse-engineered Bose's BMAP protocol.
 
 # Bose Headphones Control
 
-A small local web control panel for compatible Bose headphones.
+[![Tests](https://github.com/jpita/bose-headphones-control/actions/workflows/test.yml/badge.svg)](https://github.com/jpita/bose-headphones-control/actions/workflows/test.yml)
+[![Release](https://img.shields.io/github/v/release/jpita/bose-headphones-control)](https://github.com/jpita/bose-headphones-control/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Change listening modes, noise control, EQ, profile slots, device settings, and more from your browser. The app runs only on your computer and talks to your already-paired headphones over Bluetooth—no Bose account, cloud service, or phone required.
+A simple local control panel for compatible Bose headphones. Change listening modes, noise control, EQ, profiles, voice prompts, sidetone, and other supported settings without a Bose account or cloud service.
 
-![Bose Headphones Control showing listening mode, noise controls, EQ, profiles, and device settings](docs/panel.png)
+## Install on macOS
+
+The native SwiftUI app is the recommended Mac version. It is smaller, faster, and uses native macOS controls. Python and Terminal are not required.
+
+1. [Download the native macOS DMG](https://github.com/jpita/bose-headphones-control/releases/latest/download/Bose-Headphones-Control-Native-0.1.0-arm64.dmg).
+2. Open the DMG and drag **Bose Headphones Control** to **Applications**.
+3. Control-click the app in Applications and select **Open** the first time.
+4. Allow Bluetooth access when macOS asks.
+5. Power on and connect your headphones through macOS Bluetooth settings, then open the app.
+
+The current build supports Apple Silicon Macs and is open-source but unsigned. The Control-click step is required because it is not notarized by Apple.
+
+![Native Bose Headphones Control app for macOS](docs/native-app.jpg)
 
 ## What it can do
 
-- Switch listening modes and control ANC or wind block
-- Tune the full three-band equalizer
+- Switch listening modes and optionally announce the selected mode
+- Control ANC, ambient level, and wind block on editable profiles
+- Tune the three-band equalizer
 - Create, edit, activate, and clear supported profile slots
 - Rename the headphones and change supported settings such as sidetone and voice prompts
 - Show battery, firmware, connection status, and button mapping
-- Reconnect after a Bluetooth drop, with every supported write read back from the device for verification
+- Reconnect after a Bluetooth drop and verify every supported write
 - Send raw BMAP packets for protocol work
 
-![Profile slots, device settings, button mapping, and write verification](docs/advanced-controls.png)
+![Web and Electron control panel](docs/panel.png)
 
 ## Choose how to run it
 
-| Option | Best for | What you need |
+| Option | Best for | Download or command |
 | --- | --- | --- |
-| **Web panel** | Development, Linux, or running directly from source | Python and a terminal |
-| **macOS desktop app** | A finished Mac app with no Python or terminal for the user | An Apple Silicon Mac and the packaged `.dmg` or `.zip` |
-| **Linux desktop app** | A finished Electron app for Linux | Build an `.AppImage` or Arch `.pacman` package from source |
+| **Native macOS** | Most Mac users | [Download DMG](https://github.com/jpita/bose-headphones-control/releases/latest/download/Bose-Headphones-Control-Native-0.1.0-arm64.dmg) |
+| **Electron macOS** | The web interface in a desktop window | [Download DMG](https://github.com/jpita/bose-headphones-control/releases/latest/download/Bose-Headphones-Control-Electron-0.1.0-arm64.dmg) |
+| **Web panel** | Development or running directly from source | `.venv/bin/python server.py` |
+| **Linux Electron** | Arch Linux or Omarchy on ARM64 | [Download package](https://github.com/jpita/bose-headphones-control/releases/latest/download/bose-headphones-control-0.1.0-aarch64.pacman) |
 
-Both options use the same local UI and Bluetooth backend. Neither sends headphone data to a server.
+Release checksums are available in [SHA256SUMS.txt](https://github.com/jpita/bose-headphones-control/releases/latest/download/SHA256SUMS.txt).
 
-## Web panel: install and run from source
+All versions use the same local Bluetooth backend. Run only one Bose Headphones Control app at a time; a second app will stop and explain which app must be closed.
+
+## Web panel from source
 
 ### 1. Get the code
 
@@ -39,7 +57,7 @@ git clone https://github.com/jpita/bose-headphones-control.git
 cd bose-headphones-control
 ```
 
-### 2. Create a Python environment
+### 2. Install the Python environment
 
 Python 3.10 or newer is recommended.
 
@@ -48,111 +66,113 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
-### 3. Pair and connect your headphones
+### 3. Connect and start
 
-Use your operating system's Bluetooth settings. The headphones must be powered on and connected to the same computer that runs this app.
-
-### 4. Start the panel
+Pair and connect the headphones through the operating system, then run:
 
 ```sh
 .venv/bin/python server.py
 ```
 
-Your browser opens at [http://127.0.0.1:8765](http://127.0.0.1:8765). To start without opening a browser:
+The browser opens at [http://127.0.0.1:8765](http://127.0.0.1:8765). To start without opening a browser:
 
 ```sh
 .venv/bin/python server.py --no-browser
 ```
 
-## macOS desktop app: Electron
+## Electron from source
 
-The Electron wrapper runs the same panel as a normal macOS window and starts the Bluetooth backend for you.
-
-### Install a packaged build
-
-If you have a built arm64 `.dmg` or `.zip`, move **Bose Headphones Control** to Applications, then open it. Until the app is signed and notarized, macOS requires you to Control-click the app and choose **Open** the first time.
-
-### Run or build it from source
-
-For local development after completing the Python install above:
+Complete the web-panel setup first, then install Node.js dependencies and run:
 
 ```sh
 npm install
 npm run desktop
 ```
 
-To produce installable macOS artifacts, install PyInstaller in the virtual environment, then build:
+Build the macOS Electron DMG and ZIP with:
 
 ```sh
 .venv/bin/pip install -r requirements-build.txt
 npm run make:mac
 ```
 
-The resulting `.dmg` and `.zip` are written under `release/`. The first public build still needs an Apple Developer signing certificate and notarization before it is ready for general distribution.
-
-## Linux desktop app: Electron
-
-On an Arch-based system such as Omarchy, build a desktop app from the same source. This produces an `.AppImage` that launches directly and an Arch package that adds it to the application launcher.
+## Native macOS from source
 
 ```sh
-sudo pacman -S --needed git python nodejs npm bluez bluez-utils
-git clone https://github.com/jpita/bose-headphones-control.git
-cd bose-headphones-control
-python -m venv .venv
+xcode-select --install
+python3 -m venv .venv
 .venv/bin/pip install -r requirements-build.txt
-npm install
-npm run make:linux
+./scripts/make-native-mac-dmg.sh
+open "release/Bose-Headphones-Control-Native-0.1.0-arm64.dmg"
 ```
 
-The files are written under `release/`:
+The native app bundles the Python Bluetooth backend; end users do not need Python installed.
+
+## Linux on Arch or Omarchy
+
+For ARM64 Arch systems, download and install the release package:
 
 ```sh
-# Launch it directly
-./release/Bose\ Headphones\ Control-*.AppImage
-
-# Or install the Arch package, then open Bose Headphones Control from the launcher
-sudo pacman -U ./release/bose-headphones-control-*.pacman
+curl -LO https://github.com/jpita/bose-headphones-control/releases/latest/download/bose-headphones-control-0.1.0-aarch64.pacman
+sudo pacman -U ./bose-headphones-control-0.1.0-aarch64.pacman
 ```
 
-The Linux app needs access to a Bluetooth adapter. A virtual machine may need USB Bluetooth passthrough before it can talk to headphones.
+An [ARM64 AppImage](https://github.com/jpita/bose-headphones-control/releases/latest/download/Bose-Headphones-Control-0.1.0-arm64.AppImage) is also available. It requires `fuse2`:
 
-## Use it
+```sh
+sudo pacman -S --needed fuse2
+chmod +x Bose-Headphones-Control-0.1.0-arm64.AppImage
+./Bose-Headphones-Control-0.1.0-arm64.AppImage
+```
 
-1. Confirm the header shows your headphones as **connected**.
-2. Pick a listening mode, adjust EQ, or update a supported setting.
-3. Check **Write verification** after an edit. The panel reads the headphones back after each write so it shows what the firmware stored.
-4. If status looks wrong after a Bluetooth reconnect, reconnect the headphones in system Bluetooth settings, then select **Reconnect** in the panel.
+Linux needs direct access to a Bluetooth adapter. A virtual machine normally needs a USB Bluetooth adapter passed through to the guest; it cannot use the Mac's existing headphone connection.
+
+## Use the app
+
+1. Confirm the header shows the headphones as **connected**.
+2. Choose a listening mode, adjust EQ, or update a supported setting.
+3. Check **Write verification** after an edit. The app reads the value back from the headphones.
+4. If the status becomes stale after reconnecting Bluetooth, select **Reconnect** in the app.
+
+![Profile slots, device settings, button mapping, and verification](docs/advanced-controls.png)
 
 ## Compatibility
 
-The panel uses BMAP over classic Bluetooth RFCOMM. It works only with headphones supported by the vendored upstream `pybmap` device definitions.
+The app uses BMAP over classic Bluetooth RFCOMM and works only with devices supported by the vendored `pybmap` definitions.
 
 | Platform | Status |
 | --- | --- |
-| macOS | Tested, using IOBluetooth through PyObjC |
-| Linux | Supported upstream; requires `bluetoothctl` on `PATH` |
-| Windows | Not supported by this project |
+| macOS on Apple Silicon | Tested with the native and Electron apps |
+| Linux on ARM64 | Experimental; requires BlueZ and direct Bluetooth access |
+| Windows | Not supported |
 
-This UI was tested with Bose QuietComfort 45 firmware `4.0.4-4360+de6a887`. Device features and writable settings vary by model and firmware; unavailable controls are omitted or shown as read-only.
+The app was tested with Bose QuietComfort 45 firmware `4.0.4-4360+de6a887`. Device features and writable settings vary by model and firmware. Unsupported controls are omitted or shown as read-only.
+
+## Privacy and security
+
+- Headphone data stays on the computer.
+- The web interface has no remote assets or analytics.
+- The HTTP service binds to `127.0.0.1` by default and rejects cross-origin writes.
+- Only one backend can control the headphones at a time.
+
+Do not expose the HTTP service to another network interface unless you understand the security implications.
 
 ## Tests
-
-Run the automated suite on macOS after completing the Python and Node installation steps:
 
 ```sh
 npm test
 ```
 
-The suite uses a fake headphone connection to test backend recovery, API reads and verified writes, profile safety, and desktop backend shutdown. It also checks Electron syntax and Swift compilation. A real-headphone smoke test is still required for Bluetooth transport changes.
+The suite uses fake headphone connections to test recovery, API reads and verified writes, profile safety, request protection, and desktop backend shutdown. It also checks Electron syntax and Swift compilation. Real Bluetooth transport changes still require a manual headset smoke test.
 
 ## Options
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `BOSE_UI_PORT` | `8765` | Local server port |
-| `BOSE_UI_HOST` | `127.0.0.1` | Address to bind; keep this local unless you understand the network implications |
-| `BOSE_MAC` | auto-detect | Headphone Bluetooth MAC address |
-| `BOSE_DEVICE` | auto-detect | Device config, for example `qc45` |
+| `BOSE_UI_HOST` | `127.0.0.1` | Address to bind |
+| `BOSE_MAC` | auto-detect | Headphone Bluetooth address |
+| `BOSE_DEVICE` | auto-detect | Device definition, such as `qc45` |
 
 Example:
 
@@ -160,24 +180,12 @@ Example:
 BOSE_DEVICE=qc45 BOSE_MAC=68:F2:1F:XX:XX:XX .venv/bin/python server.py
 ```
 
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Report vulnerabilities privately using the instructions in [SECURITY.md](SECURITY.md). Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+
 ## Upstream and license
 
 The BMAP implementation in [`vendor/pybmap`](vendor/pybmap) originates from [aaronsb/bosectl](https://github.com/aaronsb/bosectl). Its MIT license is retained in [vendor/LICENSE-bosectl](vendor/LICENSE-bosectl).
 
 This project is not affiliated with Bose. Released under the [MIT License](LICENSE).
-
-## Native macOS app: SwiftUI
-
-The repository also includes a native SwiftUI macOS implementation. It bundles the same Bluetooth backend as the Electron app, while using native macOS controls and windowing.
-
-It is currently built from source for Apple Silicon Macs:
-
-```sh
-xcode-select --install
-python3 -m venv .venv
-.venv/bin/pip install -r requirements-build.txt
-./scripts/make-native-mac-app.sh
-open "release/Bose Headphones Control Native.app"
-```
-
-The native app starts its local backend itself. It needs the same Bluetooth permission and compatible paired headphones as the Electron app.

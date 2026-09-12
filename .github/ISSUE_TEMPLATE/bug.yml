@@ -1,0 +1,58 @@
+name: Bug report
+description: Report a problem with the web, Electron, or native app
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting a problem. Remove Bluetooth addresses and other personal identifiers from logs.
+  - type: dropdown
+    id: app
+    attributes:
+      label: App
+      options:
+        - Native macOS
+        - Electron macOS
+        - Electron Linux
+        - Web panel
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, computer architecture, and app version
+      placeholder: macOS 15, Apple Silicon, v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: headphones
+    attributes:
+      label: Headphones
+      description: Model and firmware version, without the Bluetooth address
+      placeholder: Bose QuietComfort 45, firmware 4.0.4
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      placeholder: Describe what you did, what happened, and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: The headphones are powered on and connected to this computer.
+          required: true
+        - label: No other Bose Headphones Control app is open.
+          required: true
+        - label: I removed Bluetooth addresses and personal information.
+          required: true
