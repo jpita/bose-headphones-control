@@ -67,9 +67,6 @@ final class NativeBackend: ObservableObject {
         task.environment = ProcessInfo.processInfo.environment.merging([
             "BOSE_UI_HOST": "127.0.0.1", "BOSE_UI_PORT": String(port)
         ]) { _, new in new }
-        task.terminationHandler = { [weak self] _ in
-            Task { @MainActor in self?.message = "Bluetooth service stopped. Select Reconnect to try again." }
-        }
         do { try task.run(); processController.adopt(task); Task { await waitForBackend() } }
         catch { message = "Could not start the Bluetooth service: \(error.localizedDescription)" }
     }
