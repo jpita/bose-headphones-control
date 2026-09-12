@@ -11,6 +11,10 @@
   "scripts": {
     "desktop": "electron .",
     "check": "node --check electron/main.cjs",
+    "test": "npm run test:python && npm run test:electron && npm run test:native",
+    "test:python": ".venv/bin/python -m unittest discover -s tests -p 'test_*.py'",
+    "test:electron": "node --test tests/test_backend_process.cjs && npm run check",
+    "test:native": "swiftc native-macos/BackendProcessController.swift tests/test_native_backend_process.swift -o /tmp/bose-native-process-tests && /tmp/bose-native-process-tests && swiftc -parse-as-library -typecheck native-macos/BoseHeadphonesControl.swift native-macos/NativeBackend.swift native-macos/BackendProcessController.swift -framework SwiftUI -framework AppKit",
     "build:backend": "./scripts/build-backend.sh",
     "make:mac": "npm run build:backend && electron-builder --mac dmg zip",
     "prepare:linux-backend": "./scripts/prepare-linux-backend.sh",

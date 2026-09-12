@@ -135,6 +135,16 @@ The panel uses BMAP over classic Bluetooth RFCOMM. It works only with headphones
 
 This UI was tested with Bose QuietComfort 45 firmware `4.0.4-4360+de6a887`. Device features and writable settings vary by model and firmware; unavailable controls are omitted or shown as read-only.
 
+## Tests
+
+Run the automated suite on macOS after completing the Python and Node installation steps:
+
+```sh
+npm test
+```
+
+The suite uses a fake headphone connection to test backend recovery, API reads and verified writes, profile safety, and desktop backend shutdown. It also checks Electron syntax and Swift compilation. A real-headphone smoke test is still required for Bluetooth transport changes.
+
 ## Options
 
 | Variable | Default | Purpose |

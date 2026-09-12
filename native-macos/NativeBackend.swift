@@ -52,11 +52,11 @@ final class NativeBackend: ObservableObject {
     @Published private(set) var writeLog: [String] = []
     @Published private(set) var rawLog: [String] = []
 
-    private var process: Process?
+    private let processController = BackendProcessController()
     private var port = Int.random(in: 40000...50000)
 
     func start() {
-        guard process == nil else { return }
+        guard !processController.hasProcess else { return }
         guard let executable = Bundle.main.url(forResource: "bose-panel", withExtension: nil, subdirectory: "backend") else {
             message = "The bundled Bluetooth service is missing. Rebuild the app."
             return
@@ -70,15 +70,12 @@ final class NativeBackend: ObservableObject {
         task.terminationHandler = { [weak self] _ in
             Task { @MainActor in self?.message = "Bluetooth service stopped. Select Reconnect to try again." }
         }
-        do { try task.run(); process = task; Task { await waitForBackend() } }
+        do { try task.run(); processController.adopt(task); Task { await waitForBackend() } }
         catch { message = "Could not start the Bluetooth service: \(error.localizedDescription)" }
     }
 
     func stop() {
-        guard let task = process else { return }
-        process = nil
-        task.terminationHandler = nil
-        if task.isRunning { task.terminate() }
+        processController.stop()
     }
 
     func refresh() { Task { _ = await loadState() } }

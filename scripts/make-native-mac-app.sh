@@ -10,6 +10,7 @@ mkdir -p "${app_dir}/Contents/MacOS" "${app_dir}/Contents/Resources/backend"
 swiftc -parse-as-library \
   "${project_dir}/native-macos/BoseHeadphonesControl.swift" \
   "${project_dir}/native-macos/NativeBackend.swift" \
+  "${project_dir}/native-macos/BackendProcessController.swift" \
   -o "${app_dir}/Contents/MacOS/Bose Headphones Control" \
   -framework SwiftUI -framework AppKit
 cp -R "${project_dir}/dist/bose-panel/." "${app_dir}/Contents/Resources/backend/"

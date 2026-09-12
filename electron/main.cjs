@@ -3,18 +3,14 @@ const { spawn } = require('node:child_process');
 const http = require('node:http');
 const net = require('node:net');
 const path = require('node:path');
+const { createBackendStopper } = require('./backend-process.cjs');
 
 let backend;
 let mainWindow;
-let stoppingBackend = false;
-
-function stopBackend() {
-  if (stoppingBackend || !backend || backend.killed) return;
-  stoppingBackend = true;
-  backend.removeAllListeners('error');
-  backend.kill('SIGTERM');
-  backend = undefined;
-}
+const stopBackend = createBackendStopper(
+  () => backend,
+  () => { backend = undefined; },
+);
 
 function reservePort() {
   return new Promise((resolve, reject) => {
