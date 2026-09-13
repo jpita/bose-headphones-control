@@ -8,4 +8,5 @@ out/
 release/
 dist/
 build/
+native-ios-tests/.build/
 assets/icon.iconset/
