@@ -22,6 +22,19 @@ The current build supports Apple Silicon Macs and is open-source but unsigned. T
 
 ![Native Bose Headphones Control app for macOS](docs/native-app.jpg)
 
+## iPhone app
+
+The native SwiftUI iPhone app connects directly to the encrypted Bose BLE
+control service. It uses the audio pairing already stored by iOS, without a
+second Bose account or app-pairing flow.
+
+![Bose Headphones Control app for iPhone](docs/iphone-app.png)
+
+The iPhone source and build instructions are in
+[`native-ios/`](native-ios/README.md). A free Apple developer account can install
+development builds on a personal device; App Store distribution requires the
+paid Apple Developer Program.
+
 ## What it can do
 
 - Switch listening modes and optionally announce the selected mode
@@ -39,6 +52,8 @@ The current build supports Apple Silicon Macs and is open-source but unsigned. T
 
 | Option | Best for | Download or command |
 | --- | --- | --- |
+| **Swift-only macOS** | Fully native preview with no Python backend | `npm run make:swift-native` |
+| **Native iPhone** | Direct encrypted BLE control without Bose Music setup | Build `native-ios/BoseHeadphonesControl.xcodeproj` in Xcode |
 | **Native macOS** | Most Mac users | [Download DMG](https://github.com/jpita/bose-headphones-control/releases/latest/download/Bose-Headphones-Control-Native-0.1.0-arm64.dmg) |
 | **Electron macOS** | The web interface in a desktop window | [Download DMG](https://github.com/jpita/bose-headphones-control/releases/latest/download/Bose-Headphones-Control-Electron-0.1.0-arm64.dmg) |
 | **Web panel** | Development or running directly from source | `.venv/bin/python server.py` |
@@ -46,7 +61,7 @@ The current build supports Apple Silicon Macs and is open-source but unsigned. T
 
 Release checksums are available in [SHA256SUMS.txt](https://github.com/jpita/bose-headphones-control/releases/latest/download/SHA256SUMS.txt).
 
-All versions use the same local Bluetooth backend. Run only one Bose Headphones Control app at a time; a second app will stop and explain which app must be closed.
+The Swift-only preview talks to the headphones directly through a Swift RFCOMM transport. The existing Native, Electron, and web versions remain available and use the Python/RFCOMM backend. Run only one controller at a time.
 
 ## Web panel from source
 
@@ -108,6 +123,18 @@ open "release/Bose-Headphones-Control-Native-0.1.0-arm64.dmg"
 
 The native app bundles the Python Bluetooth backend; end users do not need Python installed.
 
+## Swift-only native macOS preview
+
+This separate app reuses the native SwiftUI interface but replaces the bundled Python process and localhost API with a Swift `IOBluetooth` RFCOMM backend.
+
+```sh
+xcode-select --install
+npm run make:swift-native
+open "release/Bose-Headphones-Control-Swift-0.1.0-arm64.dmg"
+```
+
+The original native app is unchanged and remains available through `npm run make:native`.
+
 ## Linux on Arch or Omarchy
 
 For ARM64 Arch systems, download and install the release package:
@@ -138,11 +165,14 @@ Linux needs direct access to a Bluetooth adapter. A virtual machine normally nee
 
 ## Compatibility
 
-The app uses BMAP over classic Bluetooth RFCOMM and works only with devices supported by the vendored `pybmap` definitions.
+The macOS, Electron, web, and Linux apps use BMAP over classic Bluetooth
+RFCOMM. The iPhone app uses the same BMAP protocol over Bose's encrypted BLE
+service.
 
 | Platform | Status |
 | --- | --- |
-| macOS on Apple Silicon | Tested with the native and Electron apps |
+| macOS on Apple Silicon | Tested with the native, Electron, and Swift-only apps |
+| iPhone | Tested on iPhone 15 Pro with iOS 27 using encrypted BLE |
 | Linux on ARM64 | Experimental; requires BlueZ and direct Bluetooth access |
 | Windows | Not supported |
 
@@ -163,7 +193,7 @@ Do not expose the HTTP service to another network interface unless you understan
 npm test
 ```
 
-The suite uses fake headphone connections to test recovery, API reads and verified writes, profile safety, request protection, and desktop backend shutdown. It also checks Electron syntax and Swift compilation. Real Bluetooth transport changes still require a manual headset smoke test.
+The suite uses fake headphone connections to test recovery, API reads and verified writes, profile safety, request protection, desktop backend shutdown, and Swift BMAP framing. It also checks Electron syntax and both Swift targets. Real Bluetooth transport changes still require a manual headset smoke test.
 
 ## Options
 

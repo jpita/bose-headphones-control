@@ -64,7 +64,12 @@ function waitForServer(url, timeoutMs = 15000) {
 async function startBackend() {
   const port = await reservePort();
   const { command, args } = backendCommand();
-  const env = { ...process.env, BOSE_UI_HOST: '127.0.0.1', BOSE_UI_PORT: String(port) };
+  const env = {
+    ...process.env,
+    BOSE_UI_HOST: '127.0.0.1',
+    BOSE_UI_PORT: String(port),
+    BOSE_UI_PARENT_PID: String(process.pid),
+  };
 
   backend = spawn(command, args, { env, stdio: ['ignore', 'pipe', 'pipe'] });
   let backendError = '';

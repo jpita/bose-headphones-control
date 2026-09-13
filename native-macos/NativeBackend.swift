@@ -65,7 +65,9 @@ final class NativeBackend: ObservableObject {
         task.executableURL = executable
         task.arguments = ["--no-browser"]
         task.environment = ProcessInfo.processInfo.environment.merging([
-            "BOSE_UI_HOST": "127.0.0.1", "BOSE_UI_PORT": String(port)
+            "BOSE_UI_HOST": "127.0.0.1",
+            "BOSE_UI_PORT": String(port),
+            "BOSE_UI_PARENT_PID": String(ProcessInfo.processInfo.processIdentifier)
         ]) { _, new in new }
         do { try task.run(); processController.adopt(task); Task { await waitForBackend() } }
         catch { message = "Could not start the Bluetooth service: \(error.localizedDescription)" }

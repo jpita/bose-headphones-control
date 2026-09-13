@@ -165,6 +165,27 @@ class Device:
 device = Device()
 
 
+def watch_parent():
+    """Release Bluetooth if the desktop app exits without stopping us."""
+    raw_parent_pid = os.environ.get("BOSE_UI_PARENT_PID")
+    if not raw_parent_pid:
+        return None
+    try:
+        parent_pid = int(raw_parent_pid)
+    except ValueError:
+        return None
+
+    def monitor():
+        while not device._stop.wait(0.1):
+            if os.getppid() != parent_pid:
+                device.shutdown()
+                return
+
+    thread = threading.Thread(target=monitor, daemon=True)
+    thread.start()
+    return thread
+
+
 class StaleConnection(Exception):
     """The RFCOMM stream is out of step with our requests.
 
@@ -485,7 +506,10 @@ def main():
         raise
 
     # HTTP runs on a daemon thread; Bluetooth stays on the main thread.
-    threading.Thread(target=server.serve_forever, daemon=True).start()
+    threading.Thread(
+        target=lambda: server.serve_forever(poll_interval=0.1),
+        daemon=True,
+    ).start()
 
     print("Bose web UI on %s" % url)
     print("Headphones must be powered on and connected to this machine.")
@@ -493,6 +517,7 @@ def main():
         threading.Timer(0.5, lambda: webbrowser.open(url)).start()
 
     try:
+        watch_parent()
         device.pump()
     except KeyboardInterrupt:
         print("\nstopping")

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Added a separate Swift-only macOS app using IOBluetooth and BMAP over RFCOMM.
+- Reused the existing SwiftUI frontend while keeping the Python-backed Native, Electron, and web apps.
+- Added Swift tests for BMAP packet framing, BLE segmentation, and QC mode layouts.
+
 ## 0.1.0 - 2026-09-12
 
 - Added the local web control panel for compatible Bose BMAP headphones.

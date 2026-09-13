@@ -5,6 +5,13 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 project_dir="$(cd -- "${script_dir}/.." && pwd)"
 app_dir="${project_dir}/release/Bose Headphones Control Native.app"
 version="$(awk -F'"' '/"version"/ {print $4; exit}' "${project_dir}/package.json")"
+signing_identity="${BOSE_CODESIGN_IDENTITY:-}"
+
+if [[ -z "${signing_identity}" ]]; then
+  signing_identity="$(security find-identity -v -p codesigning 2>/dev/null \
+    | sed -n 's/.*"\(Apple Development:[^"]*\)"/\1/p' \
+    | head -n 1)"
+fi
 
 "${script_dir}/build-backend.sh"
 mkdir -p "${app_dir}/Contents/MacOS" "${app_dir}/Contents/Resources/backend"
@@ -36,4 +43,19 @@ cat > "${app_dir}/Contents/Info.plist" <<'PLIST'
 PLIST
 plutil -lint "${app_dir}/Contents/Info.plist"
 plutil -replace CFBundleShortVersionString -string "${version}" "${app_dir}/Contents/Info.plist"
+
+if [[ -n "${signing_identity}" ]]; then
+  while IFS= read -r -d '' candidate; do
+    if file -b "${candidate}" | grep -q '^Mach-O'; then
+      codesign --force --timestamp=none --sign "${signing_identity}" "${candidate}"
+    fi
+  done < <(find "${app_dir}/Contents/Resources/backend" -type f -print0)
+
+  codesign --force --timestamp=none --sign "${signing_identity}" "${app_dir}"
+  codesign --verify --deep --strict --verbose=2 "${app_dir}"
+  echo "Signed with ${signing_identity}"
+else
+  echo "No Apple Development identity found; leaving the app ad-hoc signed."
+fi
+
 echo "Built ${app_dir}"
