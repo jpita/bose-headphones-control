@@ -71,12 +71,16 @@ final class BoseController: ObservableObject {
     @Published private(set) var writeLog: [String] = []
     @Published private(set) var rawLog: [String] = []
 
-    private let bluetooth = BoseBLETransport()
+    private let bluetooth: any BoseTransport
     private let logger = Logger(subsystem: "com.jpita.bose-headphones-control.ios", category: "BLE")
     private var startupTask: Task<Void, Never>?
     private var modesByIndex: [Int: BMAPModeConfig] = [:]
     private var audioSettings: AudioSettings?
     private var promptLanguageID: UInt8 = 0
+
+    init(bluetooth: any BoseTransport = BoseBLETransport()) {
+        self.bluetooth = bluetooth
+    }
 
     func start() {
         guard startupTask == nil, !state.connected else { return }

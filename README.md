@@ -193,7 +193,7 @@ Do not expose the HTTP service to another network interface unless you understan
 npm test
 ```
 
-The suite uses fake headphone connections to test recovery, API reads and verified writes, profile safety, request protection, desktop backend shutdown, and Swift BMAP framing. It also checks Electron syntax and both Swift targets. Real Bluetooth transport changes still require a manual headset smoke test.
+The suite uses fake headphone connections to test recovery, API reads and verified writes, profile safety, request protection, desktop backend shutdown, Swift BMAP framing, and the iPhone BLE request path (connect rejection, mode write/read-back, and BLE segmentation). It also checks Electron syntax and both Swift targets. Real Bluetooth transport changes still require a manual headset smoke test.
 
 ## Options
 

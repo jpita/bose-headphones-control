@@ -11,11 +11,12 @@
   "scripts": {
     "desktop": "electron .",
     "check": "node --check electron/main.cjs",
-    "test": "npm run test:python && npm run test:electron && npm run test:native && npm run test:swift-backend",
+    "test": "npm run test:python && npm run test:electron && npm run test:native && npm run test:swift-backend && npm run test:ios",
     "test:python": ".venv/bin/python -m unittest discover -s tests -p 'test_*.py'",
     "test:electron": "node --test tests/test_backend_process.cjs && npm run check",
     "test:native": "swiftc native-macos/BackendProcessController.swift tests/test_native_backend_process.swift -o /tmp/bose-native-process-tests && /tmp/bose-native-process-tests && swiftc -parse-as-library -typecheck native-macos/BoseHeadphonesControl.swift native-macos/NativeBackend.swift native-macos/BackendProcessController.swift -framework SwiftUI -framework AppKit",
     "test:swift-backend": "swiftc native-swift-macos/BoseBMAP.swift tests/test_swift_bmap.swift -o /tmp/bose-swift-bmap-tests && /tmp/bose-swift-bmap-tests && swiftc -parse-as-library -typecheck native-macos/BoseHeadphonesControl.swift native-swift-macos/BoseBMAP.swift native-swift-macos/BoseRFCOMMClient.swift native-swift-macos/NativeBackend.swift -framework SwiftUI -framework AppKit -framework IOBluetooth",
+    "test:ios": "swift test --package-path native-ios-tests",
     "build:backend": "./scripts/build-backend.sh",
     "make:mac": "npm run build:backend && electron-builder --mac dmg zip",
     "make:native": "./scripts/make-native-mac-dmg.sh",

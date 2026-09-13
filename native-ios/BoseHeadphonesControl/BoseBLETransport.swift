@@ -20,7 +20,16 @@ enum BoseBLEError: LocalizedError {
 }
 
 @MainActor
-final class BoseBLETransport: NSObject {
+protocol BoseTransport: AnyObject {
+    var connectedName: String? { get }
+    var isReady: Bool { get }
+    func connect() async throws
+    func disconnect()
+    func exchange(_ packet: BMAPPacket, drain: Bool, timeout: Duration) async throws -> [BMAPPacket]
+}
+
+@MainActor
+final class BoseBLETransport: NSObject, BoseTransport {
     private static let serviceUUID = CBUUID(string: "FEBE")
     private static let secureUUID = CBUUID(string: "C65B8F2F-AEE2-4C89-B758-BC4892D6F2D8")
 
