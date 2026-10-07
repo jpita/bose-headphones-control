@@ -17,6 +17,7 @@
     "test:native": "swiftc native-macos/BackendProcessController.swift tests/test_native_backend_process.swift -o /tmp/bose-native-process-tests && /tmp/bose-native-process-tests && swiftc -parse-as-library -typecheck native-macos/BoseHeadphonesControl.swift native-macos/NativeBackend.swift native-macos/BackendProcessController.swift -framework SwiftUI -framework AppKit",
     "test:swift-backend": "swiftc native-swift-macos/BoseBMAP.swift tests/test_swift_bmap.swift -o /tmp/bose-swift-bmap-tests && /tmp/bose-swift-bmap-tests && swiftc -parse-as-library -typecheck native-macos/BoseHeadphonesControl.swift native-swift-macos/BoseBMAP.swift native-swift-macos/BoseRFCOMMClient.swift native-swift-macos/NativeBackend.swift -framework SwiftUI -framework AppKit -framework IOBluetooth",
     "test:ios": "swift test --package-path native-ios-tests",
+    "build:ios": "xcodebuild -project native-ios/BoseHeadphonesControl.xcodeproj -scheme BoseHeadphonesControl -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/bose-ios-build CODE_SIGNING_ALLOWED=NO build",
     "build:backend": "./scripts/build-backend.sh",
     "make:mac": "npm run build:backend && electron-builder --mac dmg zip",
     "make:native": "./scripts/make-native-mac-dmg.sh",
