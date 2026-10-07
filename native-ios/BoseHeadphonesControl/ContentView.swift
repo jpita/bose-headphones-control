@@ -303,14 +303,14 @@ private struct ProfilesView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 12) {
-                    ForEach(controller.state.profiles) { profile in
+                    ForEach(controller.state.profiles.filter { !($0.editable && $0.name.isEmpty) }) { profile in
                         Button { profile.editable ? (editing = profile) : controller.setMode(profile.name, announce: false) } label: {
                             HStack(spacing: 14) {
                                 Text(String(format: "%02d", profile.id))
                                     .font(.headline.monospaced())
                                     .foregroundStyle(amber)
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(profile.name.isEmpty ? "Empty mode" : profile.name)
+                                    Text(profile.name)
                                         .font(.headline)
                                     Text(profile.editable ? "CNC \(profile.cncLevel) · Editable" : "Built-in mode")
                                         .font(.caption.monospaced())
@@ -325,6 +325,17 @@ private struct ProfilesView: View {
                             }
                             .padding(18)
                             .background(card, in: RoundedRectangle(cornerRadius: 20))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    if let free = controller.state.profiles.first(where: { $0.editable && $0.name.isEmpty }) {
+                        Button { editing = free } label: {
+                            Label("Add mode", systemImage: "plus")
+                                .font(.headline)
+                                .foregroundStyle(amber)
+                                .frame(maxWidth: .infinity)
+                                .padding(18)
+                                .background(card, in: RoundedRectangle(cornerRadius: 20))
                         }
                         .buttonStyle(.plain)
                     }
@@ -365,18 +376,22 @@ private struct ProfileEditor: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("MODE") {
+                Section {
                     TextField("Name", text: $name)
                     LabeledContent("Noise level", value: "\(Int(cnc))")
                     Slider(value: $cnc, in: 0...Double(controller.state.cncMax), step: 1)
                     Toggle("Wind block", isOn: $wind)
                     Toggle("ANC", isOn: $anc)
+                } header: {
+                    Text("MODE")
+                } footer: {
+                    Text("Noise level 0 blocks the most outside sound. Higher lets more in. Wind block reduces wind noise.")
                 }
                 if !profile.name.isEmpty {
                     Section { Button("Clear this mode", role: .destructive) { controller.deleteProfile(slot: profile.id); dismiss() } }
                 }
             }
-            .navigationTitle("Mode \(profile.id)")
+            .navigationTitle(profile.name.isEmpty ? "New mode" : "Mode \(profile.id)")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
