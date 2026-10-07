@@ -5,6 +5,7 @@
 - Added a separate Swift-only macOS app using IOBluetooth and BMAP over RFCOMM.
 - Reused the existing SwiftUI frontend while keeping the Python-backed Native, Electron, and web apps.
 - Added Swift tests for BMAP packet framing, BLE segmentation, and QC mode layouts.
+- Added an auto-off timer setting to the Swift-only macOS app.
 
 ## 0.1.0 - 2026-09-12
 

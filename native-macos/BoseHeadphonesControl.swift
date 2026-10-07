@@ -282,13 +282,21 @@ private struct ControlPanel: View {
     @State private var deviceName = ""
     @State private var rawPacket = ""
     @State private var showPowerConfirm = false
+    @AppStorage("showAdvanced") private var showAdvanced = false
+    @State private var addingSlot: Int?
     private let amber = Color(red: 0.96, green: 0.66, blue: 0.19)
     private let panel = Color(red: 0.075, green: 0.09, blue: 0.12)
     private let card = Color(red: 0.11, green: 0.13, blue: 0.17)
 
     var body: some View {
         ZStack { panel.ignoresSafeArea(); ScrollView { VStack(alignment: .leading, spacing: 18) {
-            header; status; modes; noise; equalizer; profiles; settings; mappings; verification; rawConsole; actions
+            header
+            HStack(alignment: .top, spacing: 18) {
+                VStack(spacing: 18) { modes; noise; equalizer }.frame(maxWidth: .infinity)
+                settings.frame(width: 310)
+            }
+            advanced
+            Text(backend.message).font(.caption).foregroundStyle(backend.state.connected ? Color.secondary : Color.orange)
         }.padding(30) } }
         .preferredColorScheme(.dark).onAppear {
             backend.start()
@@ -299,19 +307,84 @@ private struct ControlPanel: View {
         .onChange(of: backend.state.name) { _, v in deviceName = v }
         .confirmationDialog("Power off headphones?", isPresented: $showPowerConfirm, titleVisibility: .visible) { Button("Power off", role: .destructive) { backend.powerOff() } }
     }
-    private var header: some View { HStack { VStack(alignment: .leading, spacing: 5) { Text(backendFlavor).font(.system(size:10,weight:.bold,design:.monospaced)).tracking(1).foregroundStyle(amber); Text("BOSE HEADPHONES CONTROL").font(.system(size:17,weight:.bold,design:.monospaced)).tracking(1.3); Text(backend.state.name).font(.title2.weight(.semibold)) }; Spacer(); Label(backend.state.connected ? "CONNECTED" : "CONNECTING", systemImage: backend.state.connected ? "checkmark.circle.fill" : "arrow.triangle.2.circlepath").font(.system(size:13,weight:.bold,design:.monospaced)).foregroundStyle(backend.state.connected ? Color.green : amber).padding(.horizontal,12).padding(.vertical,8).background((backend.state.connected ? Color.green : amber).opacity(0.12), in: Capsule()); Button("Refresh") { backend.refresh() }.buttonStyle(.bordered).tint(amber); Button("Reconnect") { backend.reconnect() }.buttonStyle(.bordered).tint(amber).disabled(backend.isBusy) } }
-    private var status: some View { HStack(spacing:28) { Image(systemName:"headphones").font(.system(size:42,weight:.light)).foregroundStyle(amber); VStack(alignment:.leading,spacing:6) { Text(backend.state.connected ? "Ready to listen" : "Waiting for headphones").font(.title3.weight(.semibold)); Text(backend.state.connected ? "Connected over Bluetooth to this Mac." : "Turn on and connect your headphones, then select Reconnect.").foregroundStyle(.secondary) }; Spacer(); VStack(alignment:.trailing,spacing:4) { Text(backend.state.battery.map { "\($0)%" } ?? "—").font(.system(size:30,weight:.bold,design:.rounded)); Label("Battery", systemImage:"battery.75percent").foregroundStyle(.secondary) } }.padding(22).background(card,in:RoundedRectangle(cornerRadius:18)) }
+    private var header: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "headphones").font(.system(size: 30, weight: .light)).foregroundStyle(amber)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(backend.state.name).font(.title2.weight(.semibold))
+                Text(backend.state.connected ? "Connected over Bluetooth to this Mac." : "Turn on and connect your headphones, then select Reconnect.").font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            if let battery = backend.state.battery { Label("\(battery)%", systemImage: "battery.75percent").font(.system(.title3, design: .rounded).weight(.bold)) }
+            Label(backend.state.connected ? "CONNECTED" : "CONNECTING", systemImage: backend.state.connected ? "checkmark.circle.fill" : "arrow.triangle.2.circlepath").font(.system(size: 13, weight: .bold, design: .monospaced)).foregroundStyle(backend.state.connected ? Color.green : amber).padding(.horizontal, 12).padding(.vertical, 8).background((backend.state.connected ? Color.green : amber).opacity(0.12), in: Capsule())
+            Button("Refresh") { backend.refresh() }.buttonStyle(.bordered).tint(amber)
+            Button("Reconnect") { backend.reconnect() }.buttonStyle(.bordered).tint(amber).disabled(backend.isBusy)
+        }
+    }
     private var modes: some View { section("LISTENING MODE") { FlowLayout(spacing:10) { ForEach(backend.state.playableProfiles) { p in Button(p.name) { backend.setMode(p.name, announce: announceMode) }.buttonStyle(ModeButton(selected:p.id == backend.state.modeIndex, amber:amber)).disabled(backend.isBusy) } }; Toggle("Say the mode name out loud", isOn:$announceMode).toggleStyle(.switch); if backend.state.playableProfiles.isEmpty { Text("Modes appear when the headphones connect.").foregroundStyle(.secondary) } } }
     private var noise: some View { Group { if let p = backend.state.activeProfile, p.editable { section("NOISE CONTROL") { Stepper("CNC level: \(backend.state.cncLevel)", value: Binding(get:{backend.state.cncLevel}, set:backend.setCNC), in:0...backend.state.cncMax).disabled(backend.isBusy); Toggle("ANC", isOn:Binding(get:{p.ancToggle}, set:backend.setANC)).toggleStyle(.switch).disabled(backend.isBusy); Toggle("Wind block", isOn:Binding(get:{p.windBlock}, set:backend.setWind)).toggleStyle(.switch).disabled(backend.isBusy); Text("0 is maximum noise cancellation; \(backend.state.cncMax) is maximum ambient sound.").font(.caption).foregroundStyle(.secondary) } } } }
-    private var equalizer: some View { section("EQUALIZER") { ForEach(0..<3,id:\.self) { i in HStack { Text(["Bass","Mid","Treble"][i]).frame(width:58,alignment:.leading); Slider(value:$eq[i],in:-10...10,step:1).tint(amber); Text(eq[i],format:.number.sign(strategy:.always())).font(.system(.body,design:.monospaced)).frame(width:28) } }; HStack { Button("Flat") { eq = [0,0,0] }; Button("Bass boost") { eq = [4,0,2] }; Button("Podcast") { eq = [-4,2,3] }; Button("V-shape") { eq = [3,-2,4] }; Button("Restore −8/−2/0") { eq = [-8,-2,0] }; Button("Save equalizer") { backend.setEqualizer(eq) }.buttonStyle(.borderedProminent).tint(amber).foregroundStyle(.black) }.disabled(backend.isBusy || !backend.state.connected) } }
-    private var profiles: some View { section("PROFILE SLOTS") { ForEach(backend.state.profiles) { profile in ProfileRow(profile:profile, maxCNC:backend.state.cncMax, active:profile.id == backend.state.modeIndex, backend:backend).id("\(profile.id)-\(profile.name)-\(profile.cncLevel)") } } }
-    private var settings: some View { section("DEVICE SETTINGS") { HStack { TextField("Device name",text:$deviceName).textFieldStyle(.roundedBorder); Button("Rename") { backend.rename(deviceName) } }.disabled(backend.isBusy); if backend.state.supports("sidetone") { Picker("Sidetone",selection:Binding(get:{backend.state.sidetone},set:backend.setSidetone)) { ForEach(["off","low","medium","high"],id:\.self) { Text($0.capitalized).tag($0) } }.disabled(backend.isBusy) }; if backend.state.supports("voice_prompts") { Toggle("Voice prompts\(backend.state.promptsLanguage.isEmpty ? "" : " (\(backend.state.promptsLanguage))")",isOn:Binding(get:{backend.state.promptsEnabled},set:backend.setPrompts)).toggleStyle(.switch) }; if backend.state.supports("auto_pause") { Toggle("Pause when removed",isOn:Binding(get:{backend.state.autoPause},set:backend.setAutoPause)).toggleStyle(.switch) }; if backend.state.supports("auto_answer") { Toggle("Auto-answer calls",isOn:Binding(get:{backend.state.autoAnswer},set:backend.setAutoAnswer)).toggleStyle(.switch) }; Divider().overlay(.white.opacity(0.1)); LabeledContent("Firmware",value:backend.state.firmware); LabeledContent("Current mode",value:backend.state.mode) } }
+    private var equalizer: some View {
+        section("EQUALIZER") {
+            ForEach(0..<3, id: \.self) { i in HStack { Text(["Bass", "Mid", "Treble"][i]).frame(width: 58, alignment: .leading); Slider(value: $eq[i], in: -10...10, step: 1).tint(amber); Text(eq[i], format: .number.sign(strategy: .always())).font(.system(.body, design: .monospaced)).frame(width: 28) } }
+            FlowLayout(spacing: 8) {
+                Button("Flat") { eq = [0, 0, 0] }; Button("Bass boost") { eq = [4, 0, 2] }; Button("Podcast") { eq = [-4, 2, 3] }; Button("V-shape") { eq = [3, -2, 4] }; Button("Restore −8/−2/0") { eq = [-8, -2, 0] }
+            }
+            HStack { Spacer(); Button("Save equalizer") { backend.setEqualizer(eq) }.buttonStyle(.borderedProminent).tint(amber).foregroundStyle(.black) }
+        }.disabled(backend.isBusy || !backend.state.connected)
+    }
+    private var profiles: some View {
+        let isEmptySlot = { (p: NativeProfile) in p.editable && p.name.isEmpty }
+        let pendingSlot = backend.state.profiles.first { isEmptySlot($0) && $0.id == addingSlot }
+        let shown = backend.state.profiles.filter { !isEmptySlot($0) || $0.id == pendingSlot?.id }
+        return section("PROFILE SLOTS") {
+            ForEach(shown) { profile in ProfileRow(profile: profile, maxCNC: backend.state.cncMax, active: profile.id == backend.state.modeIndex, backend: backend, onCancel: profile.id == pendingSlot?.id ? { addingSlot = nil } : nil).id("\(profile.id)-\(profile.name)-\(profile.cncLevel)") }
+            if pendingSlot == nil, let free = backend.state.profiles.first(where: isEmptySlot) {
+                Button("Add profile") { addingSlot = free.id }.disabled(backend.isBusy)
+            }
+            Text("CNC is the noise cancelling level: 0 blocks the most outside sound, higher lets more in. Wind reduces wind noise. ANC turns noise cancelling on or off.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+    private var settings: some View {
+        section("SETTINGS") {
+            if backend.state.supports("auto_off") { Picker("Auto-off", selection: Binding(get: { backend.state.autoOffMinutes }, set: backend.setAutoOff)) { ForEach(autoOffChoices(backend.state.autoOffMinutes), id: \.minutes) { Text($0.label).tag($0.minutes) } }.disabled(backend.isBusy) }
+            if backend.state.supports("voice_prompts") { Toggle("Voice prompts\(backend.state.promptsLanguage.isEmpty ? "" : " (\(backend.state.promptsLanguage))")", isOn: Binding(get: { backend.state.promptsEnabled }, set: backend.setPrompts)).toggleStyle(.switch) }
+            if backend.state.supports("auto_pause") { Toggle("Pause when removed", isOn: Binding(get: { backend.state.autoPause }, set: backend.setAutoPause)).toggleStyle(.switch) }
+            if backend.state.supports("auto_answer") { Toggle("Auto-answer calls", isOn: Binding(get: { backend.state.autoAnswer }, set: backend.setAutoAnswer)).toggleStyle(.switch) }
+            if backend.state.supports("sidetone") { Picker("Sidetone", selection: Binding(get: { backend.state.sidetone }, set: backend.setSidetone)) { ForEach(["off", "low", "medium", "high"], id: \.self) { Text($0.capitalized).tag($0) } }.disabled(backend.isBusy) }
+        }
+    }
+    private var deviceSection: some View {
+        section("DEVICE") {
+            HStack { TextField("Device name", text: $deviceName).textFieldStyle(.roundedBorder); Button("Rename") { backend.rename(deviceName) } }.disabled(backend.isBusy)
+            LabeledContent("Firmware", value: backend.state.firmware)
+            LabeledContent("Current mode", value: backend.state.mode)
+            LabeledContent("Backend", value: backendFlavor.capitalized)
+            HStack { Button("Enter pairing mode") { backend.pair() }; Button("Power off headphones", role: .destructive) { showPowerConfirm = true } }.disabled(backend.isBusy)
+        }
+    }
+    private var advanced: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Button { withAnimation(.easeInOut(duration: 0.15)) { showAdvanced.toggle() } } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: showAdvanced ? "chevron.down" : "chevron.right").frame(width: 12)
+                    Text("ADVANCED").font(.system(size: 12, weight: .bold, design: .monospaced)).tracking(1.1).foregroundStyle(amber)
+                    Text("Device, profile slots, buttons, write log, raw console").font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                }.padding(.horizontal, 22).padding(.vertical, 16).background(card, in: RoundedRectangle(cornerRadius: 18)).contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            if showAdvanced { deviceSection; profiles; mappings; verification; rawConsole }
+        }
+    }
     private var mappings: some View { section("BUTTON MAPPING") { if backend.state.buttons.isEmpty { Text("This device reports no remappable buttons.").foregroundStyle(.secondary) } else { Grid(alignment:.leading,horizontalSpacing:24,verticalSpacing:8) { GridRow { Text("BUTTON").foregroundStyle(.secondary); Text("EVENT").foregroundStyle(.secondary); Text("DOES").foregroundStyle(.secondary) }; ForEach(backend.state.buttons) { b in GridRow { Text(b.button); Text(b.event).font(.system(.body,design:.monospaced)); Text(b.action).font(.system(.body,design:.monospaced)) } } }; Text("Read-only, matching the Electron app. Use the Bose app to remap buttons.").font(.caption).foregroundStyle(.secondary) } } }
     private var verification: some View { section("WRITE VERIFICATION") { if backend.writeLog.isEmpty { Text("Every change is read back from the headphones.").foregroundStyle(.secondary) } else { ForEach(backend.writeLog,id:\.self) { Text($0).font(.system(.caption,design:.monospaced)).foregroundStyle($0.hasPrefix("!") ? .orange : .green) } } } }
     private var rawConsole: some View { section("RAW BMAP CONSOLE") { Text("Packet: <fblock> <func> <op> <len> <payload>. Example: 02 02 01 00").font(.caption).foregroundStyle(.secondary); HStack { TextField("02 02 01 00",text:$rawPacket).textFieldStyle(.roundedBorder); Button("Send") { backend.sendRaw(rawPacket) }; Button("Clear") { backend.clearRawLog() } }; ForEach(backend.rawLog,id:\.self) { Text($0).font(.system(.caption,design:.monospaced)).foregroundStyle(.secondary) } } }
-    private var actions: some View { section("DEVICE ACTIONS") { HStack { Button("Enter pairing mode") { backend.pair() }; Button("Power off headphones",role:.destructive) { showPowerConfirm = true } }.disabled(backend.isBusy); Text(backend.message).font(.caption).foregroundStyle(backend.state.connected ? Color.secondary : Color.orange) } }
     private func section<Content:View>(_ title:String,@ViewBuilder content:()->Content)->some View { VStack(alignment:.leading,spacing:16) { Text(title).font(.system(size:12,weight:.bold,design:.monospaced)).tracking(1.1).foregroundStyle(amber); content() }.padding(22).frame(maxWidth:.infinity,alignment:.leading).background(card,in:RoundedRectangle(cornerRadius:18)) }
 }
-private struct ProfileRow: View { let profile:NativeProfile; let maxCNC:Int; let active:Bool; @ObservedObject var backend:NativeBackend; @State private var name=""; @State private var cnc=0; @State private var wind=false; @State private var anc=false; init(profile:NativeProfile,maxCNC:Int,active:Bool,backend:NativeBackend){self.profile=profile;self.maxCNC=maxCNC;self.active=active;self.backend=backend;_name=State(initialValue:profile.name);_cnc=State(initialValue:profile.cncLevel);_wind=State(initialValue:profile.windBlock);_anc=State(initialValue:profile.ancToggle)}; var body:some View { VStack(alignment:.leading,spacing:8) { HStack { Text("\(profile.id)").font(.system(.body,design:.monospaced)).foregroundStyle(.secondary); Text(profile.name.isEmpty ? "Empty slot" : profile.name).fontWeight(.semibold); Spacer(); if active { Text("ACTIVE").font(.caption).foregroundStyle(.orange) }; if !profile.editable { Text("PRESET").font(.caption).foregroundStyle(.secondary) } }; if profile.editable { HStack { TextField("Profile name",text:$name).textFieldStyle(.roundedBorder); Stepper("CNC \(cnc)",value:$cnc,in:0...maxCNC); Toggle("Wind",isOn:$wind).toggleStyle(.switch); Toggle("ANC",isOn:$anc).toggleStyle(.switch); Button(profile.name.isEmpty ? "Create":"Save") { backend.saveProfile(slot:profile.id,name:name.trimmingCharacters(in:.whitespacesAndNewlines),cnc:cnc,wind:wind,anc:anc,spatial:profile.spatial) }; if !profile.name.isEmpty { Button("Clear",role:.destructive) { backend.deleteProfile(slot:profile.id) } } } } else if !active { Button("Activate") { backend.setMode(profile.name,announce:false) } } }.padding(12).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:10)) } }
+private func autoOffChoices(_ current: Int) -> [(minutes: Int, label: String)] {
+    var choices = [(5, "5 minutes"), (20, "20 minutes"), (40, "40 minutes"), (60, "1 hour"), (180, "3 hours"), (0, "Never")]
+    if !choices.contains(where: { $0.0 == current }) { choices.append((current, "\(current) minutes")) }
+    return choices.map { (minutes: $0.0, label: $0.1) }
+}
+private struct ProfileRow: View { let profile:NativeProfile; let maxCNC:Int; let active:Bool; let onCancel:(() -> Void)?; @ObservedObject var backend:NativeBackend; @State private var name=""; @State private var cnc=0; @State private var wind=false; @State private var anc=false; init(profile:NativeProfile,maxCNC:Int,active:Bool,backend:NativeBackend,onCancel:(() -> Void)? = nil){self.profile=profile;self.maxCNC=maxCNC;self.active=active;self.backend=backend;self.onCancel=onCancel;_name=State(initialValue:profile.name);_cnc=State(initialValue:profile.cncLevel);_wind=State(initialValue:profile.windBlock);_anc=State(initialValue:profile.ancToggle)}; var body:some View { VStack(alignment:.leading,spacing:8) { HStack { Text("\(profile.id)").font(.system(.body,design:.monospaced)).foregroundStyle(.secondary); Text(profile.name.isEmpty ? "New profile" : profile.name).fontWeight(.semibold); Spacer(); if active { Text("ACTIVE").font(.caption).foregroundStyle(.orange) }; if !profile.editable { Text("PRESET").font(.caption).foregroundStyle(.secondary) } }; if profile.editable { HStack { TextField("Profile name",text:$name).textFieldStyle(.roundedBorder); Stepper("CNC \(cnc)",value:$cnc,in:0...maxCNC); Toggle("Wind",isOn:$wind).toggleStyle(.switch); Toggle("ANC",isOn:$anc).toggleStyle(.switch); Button(profile.name.isEmpty ? "Create":"Save") { backend.saveProfile(slot:profile.id,name:name.trimmingCharacters(in:.whitespacesAndNewlines),cnc:cnc,wind:wind,anc:anc,spatial:profile.spatial) }; if !profile.name.isEmpty { Button("Clear",role:.destructive) { backend.deleteProfile(slot:profile.id) } } else if let onCancel { Button("Cancel") { onCancel() } } } } else if !active { Button("Activate") { backend.setMode(profile.name,announce:false) } } }.padding(12).background(Color.white.opacity(0.045),in:RoundedRectangle(cornerRadius:10)) } }
 private struct ModeButton:ButtonStyle { let selected:Bool;let amber:Color;func makeBody(configuration:Configuration)->some View { configuration.label.padding(.horizontal,15).padding(.vertical,11).foregroundStyle(selected ? Color.black:Color.primary).background(selected ? amber:Color.white.opacity(0.06),in:RoundedRectangle(cornerRadius:10)) } }
 private struct FlowLayout:Layout { var spacing:CGFloat=8; func sizeThatFits(proposal:ProposedViewSize,subviews:Subviews,cache:inout())->CGSize{let w=proposal.width ?? 400;var x:CGFloat=0,y:CGFloat=0,l:CGFloat=0;for v in subviews{let s=v.sizeThatFits(.unspecified);if x+s.width>w,x>0{x=0;y+=l+spacing;l=0};x+=s.width+spacing;l=max(l,s.height)};return CGSize(width:w,height:y+l)};func placeSubviews(in b:CGRect,proposal:ProposedViewSize,subviews:Subviews,cache:inout()){var x=b.minX,y=b.minY,l:CGFloat=0;for v in subviews{let s=v.sizeThatFits(.unspecified);if x+s.width>b.maxX,x>b.minX{x=b.minX;y+=l+spacing;l=0};v.place(at:CGPoint(x:x,y:y),proposal:ProposedViewSize(s));x+=s.width+spacing;l=max(l,s.height)}} }

@@ -35,6 +35,7 @@ struct NativeHeadphoneState {
     var promptsLanguage = ""
     var autoPause = false
     var autoAnswer = false
+    var autoOffMinutes = 0
     var features: Set<String> = []
     var buttons: [NativeButtonMapping] = []
 
@@ -88,6 +89,7 @@ final class NativeBackend: ObservableObject {
     func setPrompts(_ enabled: Bool) { action("set_prompts", args: ["enabled": enabled], label: "Voice prompts \(enabled ? "on" : "off")") }
     func setAutoPause(_ enabled: Bool) { action("set_auto_pause", args: ["enabled": enabled], label: "Auto-pause \(enabled ? "on" : "off")") }
     func setAutoAnswer(_ enabled: Bool) { action("set_auto_answer", args: ["enabled": enabled], label: "Auto-answer \(enabled ? "on" : "off")") }
+    func setAutoOff(_ minutes: Int) { message = "Auto-off is only available in the Swift-only app." }
     func rename(_ name: String) { action("set_name", args: ["new_name": name], label: "Renamed headphones") }
     func saveProfile(slot: Int, name: String, cnc: Int, wind: Bool, anc: Bool, spatial: Int) {
         action("set_profile", args: ["slot": slot, "name": name, "cnc_level": cnc, "wind_block": wind, "anc_toggle": anc, "spatial": spatial], label: "Saved profile slot \(slot)")
