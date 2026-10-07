@@ -515,9 +515,7 @@ final class BoseController: ObservableObject {
 
     private func displayName(for config: BMAPModeConfig) -> String {
         if !config.name.isEmpty { return config.name }
-        if config.editable { return "" }
-        let known = [0: "Quiet", 1: "Aware", 2: "Immersion", 3: "Cinema"]
-        return known[config.index] ?? "Mode \(config.index)"
+        return defaultModeName(index: config.index, editable: config.editable)
     }
 
     private func parseEQ(_ payload: Data) -> [Int] {
@@ -534,23 +532,11 @@ final class BoseController: ObservableObject {
     private func parseButton(_ payload: Data) -> NativeButtonMapping? {
         let bytes = [UInt8](payload)
         guard bytes.count >= 3 else { return nil }
-        let buttonNames = [0: "DistalCnc", 2: "Vpa", 3: "RightShortcut", 4: "LeftShortcut", 16: "Action", 128: "Shortcut"]
-        let eventNames = [
-            0: "reserved", 1: "rising_edge", 2: "falling_edge", 3: "short_press", 4: "single_press", 5: "press_and_hold",
-            6: "double_press", 7: "double_press_hold", 8: "triple_press", 9: "long_press", 10: "very_long_press",
-            11: "very_very_long_press", 12: "very_very_very_long_press"
-        ]
-        let actionNames = [
-            0: "NotConfigured", 1: "VPA", 2: "ANC", 3: "BatteryLevel", 4: "PlayPause", 5: "IncreaseCNC", 6: "DecreaseCNC",
-            7: "ToggleWakeWord", 8: "SwitchDevice", 9: "ConversationMode", 10: "TrackForward", 11: "TrackBack",
-            12: "FetchNotifications", 13: "WindMode", 14: "Disabled", 15: "ClientInteraction", 16: "SpotifyGo",
-            17: "ModesCarousel", 19: "SpatialAudioMode", 20: "LineInSwitch", 21: "Linking"
-        ]
         return NativeButtonMapping(
             id: "\(bytes[0])-\(bytes[1])",
-            button: buttonNames[Int(bytes[0])] ?? String(format: "0x%02x", bytes[0]),
-            event: eventNames[Int(bytes[1])] ?? String(bytes[1]),
-            action: actionNames[Int(bytes[2])] ?? String(bytes[2])
+            button: bmapButtonNames[Int(bytes[0])] ?? String(format: "0x%02x", bytes[0]),
+            event: bmapEventNames[Int(bytes[1])] ?? String(bytes[1]),
+            action: bmapActionNames[Int(bytes[2])] ?? String(bytes[2])
         )
     }
 

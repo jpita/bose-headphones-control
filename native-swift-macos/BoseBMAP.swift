@@ -251,6 +251,36 @@ func decodeBMAPString<S: Sequence>(_ bytes: S) -> String where S.Element == UInt
     return String(decoding: terminated, as: UTF8.self)
 }
 
+let bmapButtonNames: [Int: String] = [0: "DistalCnc", 1: "Reserved", 2: "Vpa", 3: "RightShortcut", 4: "LeftShortcut", 16: "Action", 128: "Shortcut"]
+
+let bmapEventNames: [Int: String] = [
+    0: "reserved", 1: "rising_edge", 2: "falling_edge", 3: "short_press", 4: "single_press", 5: "press_and_hold",
+    6: "double_press", 7: "double_press_hold", 8: "triple_press", 9: "long_press", 10: "very_long_press",
+    11: "very_very_long_press", 12: "very_very_very_long_press"
+]
+
+let bmapActionNames: [Int: String] = [
+    0: "NotConfigured", 1: "VPA", 2: "ANC", 3: "BatteryLevel", 4: "PlayPause", 5: "IncreaseCNC", 6: "DecreaseCNC",
+    7: "ToggleWakeWord", 8: "SwitchDevice", 9: "ConversationMode", 10: "TrackForward", 11: "TrackBack",
+    12: "FetchNotifications", 13: "WindMode", 14: "Disabled", 15: "ClientInteraction", 16: "SpotifyGo",
+    17: "ModesCarousel", 19: "SpatialAudioMode", 20: "LineInSwitch", 21: "Linking"
+]
+
+func defaultModeName(index: Int, editable: Bool) -> String {
+    if editable { return "" }
+    let known = [0: "Quiet", 1: "Aware", 2: "Immersion", 3: "Cinema"]
+    return known[index] ?? "Mode \(index)"
+}
+
+func autoOffLabel(_ minutes: Int) -> String { minutes == 0 ? "never" : "\(minutes) min" }
+
+func autoOffMinutes(from payload: Data) -> Int? { payload.first.map(Int.init) }
+
+func autoOffPayload(minutes: Int) throws -> Data {
+    guard (0...255).contains(minutes) else { throw BMAPError.unsupported("Auto-off must be 0–255 minutes.") }
+    return Data([UInt8(minutes)])
+}
+
 extension Data {
     var hex: String { map { String(format: "%02x", $0) }.joined(separator: " ") }
 }

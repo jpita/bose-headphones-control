@@ -49,6 +49,27 @@ struct SwiftBMAPTests {
         let write48 = try mode48.writePayload()
         expect(write48.count == 40, "48-byte write layout")
 
+        expect(defaultModeName(index: 2, editable: true) == "", "empty editable slot has no default name")
+        expect(defaultModeName(index: 3, editable: true) == "", "empty editable slot 3 has no default name")
+        expect(defaultModeName(index: 0, editable: false) == "Quiet", "preset 0 name")
+        expect(defaultModeName(index: 1, editable: false) == "Aware", "preset 1 name")
+        expect(defaultModeName(index: 9, editable: false) == "Mode 9", "unknown preset name")
+
+        expect(bmapActionNames[16] == "SpotifyGo", "action 16 name")
+        expect(bmapEventNames[9] == "long_press", "event 9 name")
+        expect(bmapButtonNames[128] == "Shortcut", "button 128 name")
+
+        expect(autoOffMinutes(from: Data([0x05])) == 5, "auto-off 5 minutes read")
+        expect(autoOffMinutes(from: Data([0x14])) == 20, "auto-off 20 minutes read")
+        expect(autoOffMinutes(from: Data()) == nil, "auto-off empty payload")
+        let autoOff20 = try autoOffPayload(minutes: 20)
+        let autoOffNever = try autoOffPayload(minutes: 0)
+        expect(autoOff20 == Data([0x14]), "auto-off 20 minutes write")
+        expect(autoOffNever == Data([0]), "auto-off never write")
+        expect((try? autoOffPayload(minutes: 256)) == nil, "auto-off above 255 rejected")
+        expect((try? autoOffPayload(minutes: -1)) == nil, "auto-off below 0 rejected")
+        expect(autoOffLabel(0) == "never" && autoOffLabel(40) == "40 min", "auto-off labels")
+
         print("Swift BMAP tests passed")
     }
 }
