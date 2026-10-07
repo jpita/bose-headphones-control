@@ -36,6 +36,7 @@ struct NativeHeadphoneState {
     var promptsLanguage = ""
     var autoPause = false
     var autoAnswer = false
+    var autoOffMinutes = 0
     var features: Set<String> = []
     var buttons: [NativeButtonMapping] = []
 
@@ -165,6 +166,13 @@ final class NativeBackend: ObservableObject {
     func setAutoAnswer(_ enabled: Bool) {
         action("Auto-answer \(enabled ? "on" : "off")") {
             _ = try await self.request(1, 27, .setGet, Data([enabled ? 1 : 0]))
+        }
+    }
+
+    func setAutoOff(_ minutes: Int) {
+        action("Auto-off: \(minutes == 0 ? "never" : "\(minutes) min")") {
+            guard (0...255).contains(minutes) else { throw BMAPError.unsupported("Auto-off must be 0–255 minutes.") }
+            _ = try await self.request(1, 4, .setGet, Data([UInt8(minutes)]))
         }
     }
 
@@ -330,7 +338,7 @@ final class NativeBackend: ObservableObject {
 
         if let packet = try? await request(31, 3, .get), let index = packet.payload.first {
             next.modeIndex = Int(index)
-            next.mode = next.profiles.first(where: { $0.id == Int(index) })?.name ?? "Mode \(index)"
+            next.mode = next.profiles.first(where: { $0.id == Int(index) && !$0.name.isEmpty })?.name ?? "Mode \(index)"
         }
 
         if let active = next.modeIndex.flatMap({ modesByIndex[$0] }) {
@@ -373,6 +381,10 @@ final class NativeBackend: ObservableObject {
         if let packet = try? await request(1, 27, .get), let value = packet.payload.first {
             next.autoAnswer = value != 0
             next.features.insert("auto_answer")
+        }
+        if let packet = try? await request(1, 4, .get), let value = packet.payload.first {
+            next.autoOffMinutes = Int(value)
+            next.features.insert("auto_off")
         }
         if let packet = try? await request(1, 9, .get), let mapping = parseButton(packet.payload) {
             next.buttons = [mapping]
@@ -463,8 +475,9 @@ final class NativeBackend: ObservableObject {
 
     private func displayName(for config: BMAPModeConfig) -> String {
         if !config.name.isEmpty { return config.name }
+        if config.editable { return "" }
         let known = [0: "Quiet", 1: "Aware", 2: "Immersion", 3: "Cinema"]
-        return known[config.index] ?? (config.editable ? "" : "Mode \(config.index)")
+        return known[config.index] ?? "Mode \(config.index)"
     }
 
     private func parseEQ(_ payload: Data) -> [Int] {
@@ -482,8 +495,17 @@ final class NativeBackend: ObservableObject {
         let bytes = [UInt8](payload)
         guard bytes.count >= 3 else { return nil }
         let buttonNames = [0: "DistalCnc", 2: "Vpa", 3: "RightShortcut", 4: "LeftShortcut", 16: "Action", 128: "Shortcut"]
-        let eventNames = [3: "short_press", 4: "single_press", 5: "press_and_hold", 6: "double_press", 9: "long_press"]
-        let actionNames = [0: "NotConfigured", 1: "VPA", 2: "ANC", 3: "BatteryLevel", 4: "PlayPause", 8: "SwitchDevice", 14: "Disabled", 17: "ModesCarousel", 19: "SpatialAudioMode"]
+        let eventNames = [
+            0: "reserved", 1: "rising_edge", 2: "falling_edge", 3: "short_press", 4: "single_press", 5: "press_and_hold",
+            6: "double_press", 7: "double_press_hold", 8: "triple_press", 9: "long_press", 10: "very_long_press",
+            11: "very_very_long_press", 12: "very_very_very_long_press"
+        ]
+        let actionNames = [
+            0: "NotConfigured", 1: "VPA", 2: "ANC", 3: "BatteryLevel", 4: "PlayPause", 5: "IncreaseCNC", 6: "DecreaseCNC",
+            7: "ToggleWakeWord", 8: "SwitchDevice", 9: "ConversationMode", 10: "TrackForward", 11: "TrackBack",
+            12: "FetchNotifications", 13: "WindMode", 14: "Disabled", 15: "ClientInteraction", 16: "SpotifyGo",
+            17: "ModesCarousel", 19: "SpatialAudioMode", 20: "LineInSwitch", 21: "Linking"
+        ]
         return NativeButtonMapping(
             id: "\(bytes[0])-\(bytes[1])",
             button: buttonNames[Int(bytes[0])] ?? String(format: "0x%02x", bytes[0]),
